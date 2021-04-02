@@ -355,7 +355,16 @@
           "prefix": {
             "value": "[parameters('prefix')]"
           },
-          "subnetId": {
+          "vmName": {
+            "value": "hci"
+          },
+          "vnetGroup": {
+            "value": "[variables('dataPlaneGroupArc')]"
+          },
+          "vnet": {
+            "value": "[reference('TemplateDataPlaneArcVNet').outputs.virtualNetwork.value.id]"
+          },
+          "subnet": {
             "value": "[reference('TemplateDataPlaneArcVNet').outputs.subnets.value.subnet1Id]"
           },
           "vmSize": {
