@@ -30,7 +30,7 @@
       "metadata": {
         "description": "URL Location on where to find the templates"
       },
-      "defaultValue": "https://raw.githubusercontent.com/danielscholl/azure-ipc-arch/master/templates/"
+      "defaultValue": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/master/templates/"
     },
     "remoteAccessACL": {
       "type": "string",
@@ -46,21 +46,21 @@
       },
       "defaultValue": "10.0.0.0/16"
     },
-    "hclCIDR": {
+    "subnetCIDR": {
       "type": "string",
       "metadata": {
         "description": "Subnet 1 Address Prefix (CIDR)"
       },
       "defaultValue": "10.0.0.0/20"
     },
-    "winUserName": {
+    "serverUserName": {
       "type": "string",
       "metadata": {
         "description": "Windows SA Account UserName"
       },
       "minLength": 5
     },
-    "winPasword": {
+    "serverPassword": {
       "type": "securestring",
       "metadata": {
         "description": "Windows SA Account Password"
@@ -88,8 +88,8 @@
   },
   "variables": {
     "controlPlaneGroup": "[concat(parameters('prefix'), '-controlplane')]",
-    "dataPlaneGroupArc": "[concat(parameters('prefix'), '-dataplanearc')]",
-    "dataPlaneGroup": "[concat(parameters('prefix'), '-dataplane')]"
+    "dataPlaneGroupArc": "[concat(parameters('prefix'), '-dataplane-onprem')]",
+    "dataPlaneGroup": "[concat(parameters('prefix'), '-dataplane-cloud')]"
   },
   "resources": [
     {
@@ -135,10 +135,13 @@
             "value": "[parameters('vnetPrefix')]"
           },
           "subnet1Prefix": {
-            "value": "[parameters('hclCIDR')]"
+            "value": "[parameters('subnetCIDR')]"
           },
           "remoteAccessACL": {
             "value": "[parameters('remoteAccessACL')]"
+          },
+          "servicePrincipalObjectId": {
+            "value": "[parameters('servicePrincipalObjectId')]"
           }
         }
       }
@@ -172,10 +175,10 @@
             "value": "[parameters('servicePrincipalObjectId')]"
           },
           "serverUserName": {
-            "value": "[parameters('winUserName')]"
+            "value": "[parameters('serverUserName')]"
           },
           "serverPassword": {
-            "value": "[parameters('winPasword')]"
+            "value": "[parameters('serverPassword')]"
           }
         }
       }
