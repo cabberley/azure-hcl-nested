@@ -108,7 +108,7 @@ CreateServicePrincipal $PrincipalName
 
 tput setaf 2; echo 'Creating SSH Keys...' ; tput sgr0
 AZURE_USER=$(az account show --query user.name -otsv)
-LINUX_USER=(${AZURE_USER//@/ })
+CLEAN_USER=(${AZURE_USER//@/ })
 # CreateSSHKeys $AZURE_USER
 
 tput setaf 2; echo 'Deploying ARM Template...' ; tput sgr0
@@ -120,6 +120,6 @@ az deployment sub create --template-file azuredeploy.json  \
   --parameters servicePrincipalClientId=$CLIENT_ID \
   --parameters servicePrincipalClientKey=$CLIENT_SECRET \
   --parameters servicePrincipalObjectId=$OBJECT_ID \
-  --parameters prefix=$ENVIRONMENT --parameters random=$UNIQUE \
-  --parameters serverUserName=$LINUX_USER \
+  --parameters prefix=$ENVIRONMENT \
+  --parameters serverUserName=$CLEAN_USER \
   -ojsonc
