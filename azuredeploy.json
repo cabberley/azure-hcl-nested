@@ -1,0 +1,185 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Small unique string."
+      },
+      "minLength": 2,
+      "maxLength": 5
+    },
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Small unique string."
+      },
+      "defaultValue": "eastus"
+    },
+    "random": {
+      "type": "int",
+      "metadata": {
+        "description": "3 Digit Random Integer"
+      },
+      "minValue": 100,
+      "maxValue": 999
+    },
+    "templateURL": {
+      "type": "string",
+      "metadata": {
+        "description": "URL Location on where to find the templates"
+      },
+      "defaultValue": "https://raw.githubusercontent.com/danielscholl/azure-ipc-arch/master/templates/"
+    },
+    "remoteAccessACL": {
+      "type": "string",
+      "metadata": {
+        "description": "Allow Remote Access IP (CIDR)"
+      },
+      "defaultValue": "Internet"
+    },
+    "vnetPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual Network Address Prefix (CIDR)"
+      },
+      "defaultValue": "10.0.0.0/16"
+    },
+    "hclCIDR": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 1 Address Prefix (CIDR)"
+      },
+      "defaultValue": "10.0.0.0/20"
+    },
+    "winUserName": {
+      "type": "string",
+      "metadata": {
+        "description": "Windows SA Account UserName"
+      },
+      "minLength": 5
+    },
+    "winPasword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Windows SA Account Password"
+      },
+      "minLength": 10
+    },
+    "servicePrincipalClientId": {
+      "type": "string",
+      "metadata": {
+        "description": "Application Client Id."
+      }
+    },
+    "servicePrincipalClientKey": {
+      "type": "string",
+      "metadata": {
+        "description": "Application Client Key."
+      }
+    },
+    "servicePrincipalObjectId": {
+      "type": "string",
+      "metadata": {
+        "description": "ObjectId of Service Principal."
+      }
+    }
+  },
+  "variables": {
+    "controlPlaneGroup": "[concat(parameters('prefix'), '-controlplane')]",
+    "dataPlaneGroupArc": "[concat(parameters('prefix'), '-dataplanearc')]",
+    "dataPlaneGroup": "[concat(parameters('prefix'), '-dataplane')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2020-06-01",
+      "location": "[parameters('location')]",
+      "name": "[variables('controlPlaneGroup')]",
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2020-06-01",
+      "location": "[parameters('location')]",
+      "name": "[variables('dataPlaneGroupArc')]",
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2020-06-01",
+      "location": "[parameters('location')]",
+      "name": "[variables('dataPlaneGroup')]",
+      "properties": {}
+    },
+    {
+      "name": "TemplateVNet",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('dataPlaneGroupArc')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroupArc'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployVNet.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          },
+          "vnetPrefix": {
+            "value": "[parameters('vnetPrefix')]"
+          },
+          "subnet1Prefix": {
+            "value": "[parameters('hclCIDR')]"
+          },
+          "remoteAccessACL": {
+            "value": "[parameters('remoteAccessACL')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "TemplatePrivateKeyVault",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('controlPlaneGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('controlPlaneGroup'))]",
+        "TemplateVNet"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployPrivateKeyVault.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          },
+          "servicePrincipalClientId": {
+            "value": "[parameters('servicePrincipalClientId')]"
+          },
+          "servicePrincipalClientKey": {
+            "value": "[parameters('servicePrincipalClientKey')]"
+          },
+          "servicePrincipalObjectId": {
+            "value": "[parameters('servicePrincipalObjectId')]"
+          },
+          "serverUserName": {
+            "value": "[parameters('winUserName')]"
+          },
+          "serverPassword": {
+            "value": "[parameters('winPasword')]"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}
