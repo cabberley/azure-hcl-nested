@@ -9,12 +9,6 @@
       },
       "minLength": 2,
       "maxLength": 5
-    },
-    "servicePrincipalClientId": {
-      "type": "string",
-      "metadata": {
-        "description": "Service Principal App ID (also called Client ID) that has contributor rights to the subscription used for this deployment. It is used by Spinnaker to dynamically manage resources."
-      }
     }
   },
   "variables": {
@@ -34,20 +28,7 @@
           "name": "standard"
         },
         "tenantId": "[subscription().tenantId]",
-        "accessPolicies": [
-          {
-            "tenantId": "[subscription().tenantId]",
-            "objectId": "[parameters('servicePrincipalClientId')]",
-            "permissions": {
-              "keys": [
-                "all"
-              ],
-              "secrets": [
-                "all"
-              ]
-            }
-          }
-        ],
+        "accessPolicies": [],
         "networkAcls": {
           "bypass": "AzureServices",
           "virtualNetworkRules": [],

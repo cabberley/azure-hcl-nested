@@ -17,14 +17,6 @@
       },
       "defaultValue": "eastus"
     },
-    "random": {
-      "type": "int",
-      "metadata": {
-        "description": "3 Digit Random Integer"
-      },
-      "minValue": 100,
-      "maxValue": 999
-    },
     "templateURL": {
       "type": "string",
       "metadata": {
@@ -88,8 +80,8 @@
   },
   "variables": {
     "controlPlaneGroup": "[concat(parameters('prefix'), '-controlplane')]",
-    "dataPlaneGroupOnPrem": "[concat(parameters('prefix'), '-dataplane-onprem')]",
-    "dataPlaneGroupCloud": "[concat(parameters('prefix'), '-dataplane-cloud')]"
+    "dataPlaneGroup": "[concat(parameters('prefix'), '-dataplane')]",
+    "dataPlaneGroupArc": "[concat(parameters('prefix'), '-dataplane-arc')]"
   },
   "resources": [
     {
@@ -103,14 +95,14 @@
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2020-06-01",
       "location": "[parameters('location')]",
-      "name": "[variables('dataPlaneGroupOnPrem')]",
+      "name": "[variables('dataPlaneGroup')]",
       "properties": {}
     },
     {
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2020-06-01",
       "location": "[parameters('location')]",
-      "name": "[variables('dataPlaneGroupCloud')]",
+      "name": "[variables('dataPlaneGroupArc')]",
       "properties": {}
     },
     {
@@ -138,17 +130,41 @@
       }
     },
     {
-      "name": "TemplateDataPlaneVNet",
+      "name": "TemplateDataPlaneKeyVault",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-10-01",
-      "resourceGroup": "[variables('dataPlaneGroupOnPrem')]",
+      "resourceGroup": "[variables('dataPlaneGroup')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroupOnPrem'))]"
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroup'))]"
       ],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployVNet.json')]",
+          "uri": "[concat(parameters('templateURL'), 'deployDataPlaneKeyVault.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          },
+          "servicePrincipalClientId": {
+            "value": "[parameters('servicePrincipalClientId')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "TemplateDataPlaneArcVNet",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('dataPlaneGroupArc')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroupArc'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployDataPlaneArcVNet.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -171,18 +187,18 @@
       }
     },
     {
-      "name": "TemplateDataPlaneKeyVault",
+      "name": "TemplateDataPlaneArcKeyVault",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-10-01",
-      "resourceGroup": "[variables('dataPlaneGroupCloud')]",
+      "resourceGroup": "[variables('dataPlaneGroupArc')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroupCloud'))]",
-        "TemplateVNet"
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroupArc'))]",
+        "TemplateDataPlaneArcVNet"
       ],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployDataPlaneKeyVault.json')]",
+          "uri": "[concat(parameters('templateURL'), 'deployDataPlaneArkKeyVault.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -191,6 +207,18 @@
           },
           "servicePrincipalClientId": {
             "value": "[parameters('servicePrincipalClientId')]"
+          },
+          "servicePrincipalClientKey": {
+            "value": "[parameters('servicePrincipalClientKey')]"
+          },
+          "servicePrincipalObjectId": {
+            "value": "[parameters('servicePrincipalObjectId')]"
+          },
+          "serverUserName": {
+            "value": "[parameters('serverUserName')]"
+          },
+          "serverPassword": {
+            "value": "[parameters('serverPassword')]"
           }
         }
       }
