@@ -276,6 +276,51 @@
           }
         }
       }
+    },
+    {
+      "name": "TemplateDataPlanArcVirtualMachine",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "resourceGroup": "[variables('dataPlaneGroupArc')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroupArc'))]",
+        "TemplateDataPlaneArcVNet",
+        "TemplateDataPlaneKeyVault"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployLinuxBastion.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          },
+          "subnetId": {
+            "value": "[reference('TemplateVNet').outputs.subnets.value.subnet4Id]"
+          },
+          // "vmSize": {
+          //   "value": "[parameters('bastionSize')]"
+          // },
+          "adminUserName": {
+            "reference": {
+              "keyVault": {
+                "id": "[reference('TemplateDataPlaneKeyVault').outputs.keyVault.value.id]"
+              },
+              "secretName": "serverUserName"
+            }
+          },
+          "adminUserPassword": {
+            "reference": {
+              "keyVault": {
+                "id": "[reference('TemplateDataPlaneKeyVault').outputs.keyVault.value.id]"
+              },
+              "secretName": "serverPasword"
+            }
+          }
+        }
+      }
     }
   ],
   "outputs": {}
