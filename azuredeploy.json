@@ -88,8 +88,8 @@
   },
   "variables": {
     "controlPlaneGroup": "[concat(parameters('prefix'), '-controlplane')]",
-    "dataPlaneGroupArc": "[concat(parameters('prefix'), '-dataplane-onprem')]",
-    "dataPlaneGroup": "[concat(parameters('prefix'), '-dataplane-cloud')]"
+    "dataPlaneGroupOnPrem": "[concat(parameters('prefix'), '-dataplane-onprem')]",
+    "dataPlaneGroupCloud": "[concat(parameters('prefix'), '-dataplane-cloud')]"
   },
   "resources": [
     {
@@ -103,23 +103,47 @@
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2020-06-01",
       "location": "[parameters('location')]",
-      "name": "[variables('dataPlaneGroupArc')]",
+      "name": "[variables('dataPlaneGroupOnPrem')]",
       "properties": {}
     },
     {
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2020-06-01",
       "location": "[parameters('location')]",
-      "name": "[variables('dataPlaneGroup')]",
+      "name": "[variables('dataPlaneGroupCloud')]",
       "properties": {}
     },
     {
-      "name": "TemplateVNet",
+      "name": "TemplateControlPlaneKeyVault",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-10-01",
-      "resourceGroup": "[variables('dataPlaneGroupArc')]",
+      "resourceGroup": "[variables('controlPlaneGroup')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroupArc'))]"
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('controlPlaneGroup'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployControlPlaneKeyVault.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          },
+          "servicePrincipalClientId": {
+            "value": "[parameters('servicePrincipalClientId')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "TemplateDataPlaneVNet",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('dataPlaneGroupOnPrem')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroupOnPrem'))]"
       ],
       "properties": {
         "mode": "Incremental",
@@ -147,18 +171,18 @@
       }
     },
     {
-      "name": "TemplatePrivateKeyVault",
+      "name": "TemplateDataPlaneKeyVault",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-10-01",
-      "resourceGroup": "[variables('controlPlaneGroup')]",
+      "resourceGroup": "[variables('dataPlaneGroupCloud')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('controlPlaneGroup'))]",
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroupCloud'))]",
         "TemplateVNet"
       ],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployPrivateKeyVault.json')]",
+          "uri": "[concat(parameters('templateURL'), 'deployDataPlaneKeyVault.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -167,18 +191,6 @@
           },
           "servicePrincipalClientId": {
             "value": "[parameters('servicePrincipalClientId')]"
-          },
-          "servicePrincipalClientKey": {
-            "value": "[parameters('servicePrincipalClientKey')]"
-          },
-          "servicePrincipalObjectId": {
-            "value": "[parameters('servicePrincipalObjectId')]"
-          },
-          "serverUserName": {
-            "value": "[parameters('serverUserName')]"
-          },
-          "serverPassword": {
-            "value": "[parameters('serverPassword')]"
           }
         }
       }

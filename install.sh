@@ -121,4 +121,5 @@ az deployment sub create --template-file azuredeploy.json  \
   --parameters servicePrincipalClientKey=$CLIENT_SECRET \
   --parameters servicePrincipalObjectId=$OBJECT_ID \
   --parameters prefix=$ENVIRONMENT --parameters random=$UNIQUE \
-  --parameters serverUserName=$LINUX_USER
+  --parameters serverUserName=$LINUX_USER \
+  -ojsonc
