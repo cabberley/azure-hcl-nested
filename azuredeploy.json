@@ -359,20 +359,20 @@
             "value": "[reference('TemplateDataPlaneArcVNet').outputs.subnets.value.subnet1Id]"
           },
           "vmSize": {
-            "value": "[parameters('bastionSize')]"
+            "value": "[parameters('vmSize')]"
           },
           "adminUserName": {
             "reference": {
               "keyVault": {
-                "id": "[reference('TemplateDataPlaneKeyVault').outputs.keyVault.value.id]"
+                "id": "[reference('TemplateDataPlaneArcKeyVault').outputs.keyVault.value.id]"
               },
               "secretName": "serverUserName"
             }
           },
-          "adminUserPassword": {
+          "adminPassword": {
             "reference": {
               "keyVault": {
-                "id": "[reference('TemplateDataPlaneKeyVault').outputs.keyVault.value.id]"
+                "id": "[reference('TemplateDataPlaneArcKeyVault').outputs.keyVault.value.id]"
               },
               "secretName": "serverPasword"
             }
