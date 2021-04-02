@@ -330,7 +330,7 @@
             "value": "[reference('TemplateDataPlaneArcVNet').outputs.virtualNetwork.value.name]"
           },
           "subnet": {
-            "value": "[reference('TemplateDataPlaneArcVNet').outputs.subnets.value.subnet1Name]"
+            "value": "[reference('TemplateDataPlaneArcVNet').outputs.subnets.value.name]"
           }
         }
       }
@@ -393,7 +393,7 @@
             "value": "[reference('TemplateDataPlaneArcStorage').outputs.storageAccount.value.key]"
           },
           "remoteAccessACL": {
-            "value": "Internet"
+            "value": "[parameters('remoteAccessACL')]"
           }
         }
       }
