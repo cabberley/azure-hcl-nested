@@ -149,6 +149,12 @@
           },
           "servicePrincipalClientId": {
             "value": "[parameters('servicePrincipalClientId')]"
+          },
+          "servicePrincipalClientKey": {
+            "value": "[parameters('servicePrincipalClientKey')]"
+          },
+          "servicePrincipalObjectId": {
+            "value": "[parameters('servicePrincipalObjectId')]"
           }
         }
       }
