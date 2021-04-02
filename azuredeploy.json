@@ -251,6 +251,7 @@
       "name": "TemplateDataPlaneArcStorage",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('dataPlaneGroupArc')]",
       "dependsOn": [
         "TemplateDataPlaneArcVNet"
       ],
@@ -261,6 +262,9 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          },
           "storageAccountType": {
             "value": "Standard_LRS"
           },
