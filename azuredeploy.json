@@ -355,6 +355,9 @@
           "prefix": {
             "value": "[parameters('prefix')]"
           },
+          "useImage": {
+            "value": "No"
+          },
           "vmName": {
             "value": "hci"
           },

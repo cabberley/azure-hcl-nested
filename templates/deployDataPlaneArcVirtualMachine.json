@@ -109,7 +109,8 @@
       "type": "string",
       "metadata": {
         "description": "The Windows Image Name"
-      }
+      },
+      "defaultValue": ""
     },
     "WindowsOSVersion": {
       "type": "string",
