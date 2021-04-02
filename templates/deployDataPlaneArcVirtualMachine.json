@@ -117,7 +117,7 @@
     "subnet": {
       "type": "string",
       "metadata": {
-        "description": "Subnet ID to associate VM to."
+        "description": "Subnet Name to associate VM to."
       }
     },
     "WindowsOSVersion": {

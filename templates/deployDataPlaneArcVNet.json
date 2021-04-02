@@ -133,8 +133,8 @@
     "subnets": {
       "type": "object",
       "value": {
-        "subnet1Name": "[variables('Subnet1Name')]",
-        "subnet1Id": "[variables('subnet1Id')]"
+        "id": "[variables('subnet1Id')]",
+        "name": "[variables('Subnet1Name')]"
       }
     }
   }

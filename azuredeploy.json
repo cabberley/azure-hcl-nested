@@ -355,9 +355,6 @@
           "prefix": {
             "value": "[parameters('prefix')]"
           },
-          "useImage": {
-            "value": "No"
-          },
           "vmName": {
             "value": "hci"
           },
@@ -365,10 +362,10 @@
             "value": "[variables('dataPlaneGroupArc')]"
           },
           "vnet": {
-            "value": "[reference('TemplateDataPlaneArcVNet').outputs.virtualNetwork.value.id]"
+            "value": "[reference('TemplateDataPlaneArcVNet').outputs.virtualNetwork.value.name]"
           },
           "subnet": {
-            "value": "[reference('TemplateDataPlaneArcVNet').outputs.subnets.value.subnet1Id]"
+            "value": "[reference('TemplateDataPlaneArcVNet').outputs.subnets.value.name]"
           },
           "vmSize": {
             "value": "[parameters('vmSize')]"
@@ -388,6 +385,15 @@
               },
               "secretName": "serverPasword"
             }
+          },
+          "diagnosticsStorageName": {
+            "value": "[reference('TemplateDataPlaneArcStorage').outputs.storageAccount.value.name]"
+          },
+          "diagnosticsStorageKey": {
+            "value": "[reference('TemplateDataPlaneArcStorage').outputs.storageAccount.value.key]"
+          },
+          "remoteAccessACL": {
+            "value": "Internet"
           }
         }
       }
