@@ -66,11 +66,11 @@
         "networkAcls": {
           "bypass": "AzureServices",
           "virtualNetworkRules": [
-            {
-              "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnet'))]",
-              "action": "Allow",
-              "state": "succeeded"
-            }
+            // {
+            //   "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnet'))]",
+            //   "action": "Allow",
+            //   "state": "succeeded"
+            // }
           ],
           "ipRules": [],
           "defaultAction": "Deny"
