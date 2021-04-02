@@ -48,7 +48,7 @@
   },
   "variables": {
     "logAnalyticsConfiguration": {
-      "workspaceName": "[concat(parameters('prefix'), '-analytics')]",
+      "workspaceName": "[concat(parameters('prefix'), '-cp-analytics')]",
       "serviceTier": "[parameters('serviceTier')]",
       "dataRetention": "[parameters('dataRetention')]"
     },

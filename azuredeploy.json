@@ -246,6 +246,32 @@
           }
         }
       }
+    },
+    {
+      "name": "TemplateDataPlaneArcStorage",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "dependsOn": [
+        "TemplateDataPlaneArcVNet"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployDataPlaneArcStorage.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "storageAccountType": {
+            "value": "Standard_LRS"
+          },
+          "vnetName": {
+            "value": "[reference('TemplateDataPlaneArcVNet').outputs.virtualNetwork.value.name]"
+          },
+          "subnet": {
+            "value": "[reference('TemplateDataPlaneArcVNet').outputs.subnets.value.subnet1Name]"
+          }
+        }
+      }
     }
   ],
   "outputs": {}
