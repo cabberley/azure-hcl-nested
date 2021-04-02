@@ -37,7 +37,7 @@
     }
   },
   "variables": {
-    "VNetName": "[concat(parameters('prefix'), '-vnet')]",
+    "VNetName": "[concat(parameters('prefix'), '-dp-vnet')]",
     "VNetId": "[resourceId('Microsoft.Network/virtualNetworks', variables('VNetName'))]",
     "Subnet1Name": "default",
     "SubNet1Id": "[concat(variables('VNetId'), '/subnets/', variables('Subnet1Name'))]",
