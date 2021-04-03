@@ -168,12 +168,14 @@
   "variables": {
     "cleanPrefix": "[toLower(parameters('prefix'))]",
     "vmName": "[concat(variables('cleanPrefix'), '-', parameters('vmName'), '-vm')]",
+    "randomGUID": "[substring(uniqueString(subscription().subscriptionId, resourceGroup().id, variables('vmName')),0,6)]",
     "NicName": "[concat(variables('vmName'),'-nic')]",
     "vnetID": "[resourceId(parameters('vnetGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnet'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('subnet'))]",
     "NsgName": "[concat(variables('vmName'), '-nsg')]",
     "NsgId": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('NsgName'))]",
     "PublicIpName": "[concat(variables('vmName'), '-ip')]",
+    "DnsNameForPublicIP": "[toLower(concat(variables('vmName'), variables('randomGUID')))]",
     "dataDisksCount": 8,
     "wadlogs": "<WadCfg> <DiagnosticMonitorConfiguration overallQuotaInMB=\"4096\" xmlns=\"http://schemas.microsoft.com/ServiceHosting/2010/10/DiagnosticsConfiguration\"> <DiagnosticInfrastructureLogs scheduledTransferLogLevelFilter=\"Error\"/> <WindowsEventLog scheduledTransferPeriod=\"PT1M\" > <DataSource name=\"Application!*[System[(Level = 1 or Level = 2)]]\" /> <DataSource name=\"Security!*[System[(Level = 1 or Level = 2)]]\" /> <DataSource name=\"System!*[System[(Level = 1 or Level = 2)]]\" /></WindowsEventLog>",
     "wadperfcounters1": "<PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Processor(_Total)\\% Processor Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU utilization\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor(_Total)\\% Privileged Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU privileged time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor(_Total)\\% User Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU user time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor Information(_Total)\\Processor Frequency\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"CPU frequency\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\System\\Processes\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Processes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Process(_Total)\\Thread Count\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Threads\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Process(_Total)\\Handle Count\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Handles\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\% Committed Bytes In Use\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Memory usage\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\Available Bytes\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\Committed Bytes\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory committed\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\Commit Limit\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory commit limit\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\% Disk Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Disk active time\" locale=\"en-us\"/></PerformanceCounterConfiguration>",
@@ -213,15 +215,18 @@
     },
     {
       "comments": "## Public IP Address ##",
-      "type": "Microsoft.Network/publicIPAddresses",
+      "type": "Microsoft.Network/publicIpAddresses",
       "name": "[variables('PublicIpName')]",
-      "apiVersion": "2015-06-15",
+      "apiVersion": "2020-07-01",
       "location": "[resourceGroup().location]",
-      "tags": {
-        "Company": "[parameters('prefix')]"
+      "sku": {
+        "name": "Basic"
       },
       "properties": {
-        "publicIPAllocationMethod": "Dynamic"
+        "publicIpAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('dnsNameForPublicIP')]"
+        }
       }
     },
     {
