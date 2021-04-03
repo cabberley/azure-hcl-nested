@@ -18,6 +18,13 @@
       "minLength": 2,
       "maxLength": 4
     },
+    "domainName": {
+      "type": "string",
+      "defaultValue": "akshci.local",
+      "metadata": {
+        "description": "The FQDN that will be used in the environment"
+      }
+    },
     "vmSize": {
       "type": "string",
       "metadata": {
@@ -163,6 +170,24 @@
         "description": "Domain Admin Account Password also used as Local Machine Admin User Password"
       },
       "minLength": 12
+    },
+    "enableDHCP": {
+      "type": "string",
+      "defaultValue": "Enabled",
+      "allowedValues": [
+        "Enabled",
+        "Disabled"
+      ],
+      "metadata": {
+        "description": "Choose whether you wish to enable DHCP in the environment for AKS-HCI testing. If you choose Disabled, it can be enabled after deployment."
+      }
+    },
+    "customRdpPort": {
+      "type": "string",
+      "defaultValue": "3389",
+      "metadata": {
+        "description": "If you wish to use a different port to RDP into the VM (between 0 and 65535), change it here, otherwise, leave the default."
+      }
     }
   },
   "variables": {
@@ -183,7 +208,9 @@
     "wadcfgxstart": "[concat(variables('wadlogs'), variables('wadperfcounters1'), variables('wadperfcounters2'), '<Metrics resourceId=\"')]",
     "wadmetricsresourceid": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name , '/providers/', 'Microsoft.Compute/virtualMachines/')]",
     "wadcfgxend": "\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>",
-    "artifactsLocation": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/"
+    "artifactsLocation": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/",
+    "dscUri": "https://github.com/danielscholl/azure-hcl-nested/raw/main/dsc/akshcihost.zip",
+    "environment": "Workgroup"
   },
   "resources": [
     {
@@ -358,6 +385,44 @@
             },
             "protectedSettings": {
               "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File installWac.ps1', ' -userName ', parameters('adminUsername'))]"
+            }
+          }
+        },
+        {
+          "type": "extensions",
+          "name": "ConfigureAksHciHost",
+          "apiVersion": "2020-06-01",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[variables('vmName')]",
+            "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('vmName'), 'InstallWAC')]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Powershell",
+            "type": "DSC",
+            "typeHandlerVersion": "2.77",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "wmfVersion": "latest",
+              "configuration": {
+                "url": "[variables('dscUri')]",
+                "script": "akshcihost.ps1",
+                "function": "AKSHCIHost"
+              },
+              "configurationArguments": {
+                "DomainName": "[parameters('domainName')]",
+                "environment": "[variables('environment')]",
+                "enableDHCP": "[parameters('enableDHCP')]",
+                "customRdpPort": "[parameters('customRdpPort')]"
+              }
+            },
+            "protectedSettings": {
+              "configurationArguments": {
+                "adminCreds": {
+                  "UserName": "[parameters('adminUsername')]",
+                  "Password": "[parameters('adminPassword')]"
+                }
+              }
             }
           }
         },
