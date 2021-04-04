@@ -9,28 +9,28 @@
     "hubNetwork": {
       "type": "object",
       "defaultValue": {
-        "name": "commonresources-vnet-hub",
+        "name": "CommonResources-vnet-hub",
         "addressPrefix": "10.0.0.0/20"
       }
     },
     "controlPlaneSpoke": {
       "type": "object",
       "defaultValue": {
-        "name": "controlplane-vnet-spoke",
+        "name": "ControlPlane-vnet-spoke",
         "addressPrefix": "10.100.0.0/16",
-        "subnetName": "controlplane-resources",
+        "subnetName": "ControlPlaneSubnet",
         "subnetPrefix": "10.100.0.0/16",
-        "subnetNsgName": "controlplane-subnet-nsg"
+        "subnetNsgName": "ControlPlaneSubnet-nsg"
       }
     },
     "dataPlaneSpoke": {
       "type": "object",
       "defaultValue": {
-        "name": "dataplane-vnet-spoke",
+        "name": "DataPlane-vnet-spoke",
         "addressPrefix": "10.200.0.0/16",
-        "subnetName": "dataplane-resources",
+        "subnetName": "DataPlaneSubnet",
         "subnetPrefix": "10.200.0.0/16",
-        "subnetNsgName": "dataplane-subnet-nsg"
+        "subnetNsgName": "DataPlaneSubnet-nsg"
       }
     },
     "vpnGateway": {
@@ -39,14 +39,14 @@
         "name": "gateway-vgw",
         "subnetName": "GatewaySubnet",
         "subnetPrefix": "10.0.2.0/27",
-        "pipName": "gateway-vgw-ip"
+        "pipName": "Gateway-ip"
       }
     },
     "bastionHost": {
       "type": "object",
       "defaultValue": {
         "name": "AzureBastionHost",
-        "publicIPAddressName": "azure-bastion-ip",
+        "publicIPAddressName": "AzureBastion-ip",
         "subnetName": "AzureBastionSubnet",
         "nsgName": "AzureBastionSubnet-nsg",
         "subnetPrefix": "10.0.1.0/29"
@@ -56,7 +56,7 @@
       "type": "object",
       "defaultValue": {
         "name": "AzureFirewall",
-        "publicIPAddressName": "azure-firewall-ip",
+        "publicIPAddressName": "AzureFirewall-ip",
         "subnetName": "AzureFirewallSubnet",
         "subnetPrefix": "10.0.3.0/26",
         "routeName": "r-nexthop-to-fw"
