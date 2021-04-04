@@ -45,6 +45,13 @@
       },
       "defaultValue": "10.0.0.0/20"
     },
+    "serverPrivateIp": {
+      "type": "string",
+      "metadata": {
+        "description": "Windows Server Private IP"
+      },
+      "defaultValue": "10.0.0.4"
+    },
     "serverUserName": {
       "type": "string",
       "metadata": {
@@ -59,25 +66,7 @@
       },
       "minLength": 10
     },
-    "servicePrincipalClientId": {
-      "type": "string",
-      "metadata": {
-        "description": "Application Client Id."
-      }
-    },
-    "servicePrincipalClientKey": {
-      "type": "string",
-      "metadata": {
-        "description": "Application Client Key."
-      }
-    },
-    "servicePrincipalObjectId": {
-      "type": "string",
-      "metadata": {
-        "description": "ObjectId of Service Principal."
-      }
-    },
-    "vmSize": {
+    "serverSize": {
       "type": "string",
       "metadata": {
         "description": "The virtual machine server size."
@@ -134,6 +123,31 @@
         "Standard_E64-16ds_v4",
         "Standard_E64-32ds_v4"
       ]
+    },
+    "serverRdpPort": {
+      "type": "string",
+      "defaultValue": "3389",
+      "metadata": {
+        "description": "If you wish to use a different port to RDP into the VM (between 0 and 65535), change it here, otherwise, leave the default."
+      }
+    },
+    "servicePrincipalClientId": {
+      "type": "string",
+      "metadata": {
+        "description": "Application Client Id."
+      }
+    },
+    "servicePrincipalClientKey": {
+      "type": "string",
+      "metadata": {
+        "description": "Application Client Key."
+      }
+    },
+    "servicePrincipalObjectId": {
+      "type": "string",
+      "metadata": {
+        "description": "ObjectId of Service Principal."
+      }
     }
   },
   "variables": {
@@ -262,6 +276,9 @@
           "remoteAccessACL": {
             "value": "[parameters('remoteAccessACL')]"
           },
+          "customRdpPort": {
+            "value": "[parameters('serverRdpPort')]"
+          },
           "servicePrincipalObjectId": {
             "value": "[parameters('servicePrincipalObjectId')]"
           }
@@ -367,8 +384,14 @@
           "subnet": {
             "value": "[reference('TemplateDataPlaneArcVNet').outputs.subnets.value.name]"
           },
+          "privateIp": {
+            "value": "[parameters('serverPrivateIp')]"
+          },
+          "customRdpPort": {
+            "value": "[parameters('serverRdpPort')]"
+          },
           "vmSize": {
-            "value": "[parameters('vmSize')]"
+            "value": "[parameters('serverSize')]"
           },
           "adminUserName": {
             "reference": {

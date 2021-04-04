@@ -127,6 +127,12 @@
         "description": "Subnet Name to associate VM to."
       }
     },
+    "privateIp": {
+      "type": "string",
+      "metadata": {
+        "description": "Private IP to assign to VM."
+      }
+    },
     "WindowsOSVersion": {
       "type": "string",
       "metadata": {
@@ -192,7 +198,7 @@
   },
   "variables": {
     "cleanPrefix": "[toLower(parameters('prefix'))]",
-    "vmName": "[concat(variables('cleanPrefix'), '-', parameters('vmName'), '-vm')]",
+    "vmName": "[concat(variables('cleanPrefix'), '-dp-', parameters('vmName'), '-vm')]",
     "randomGUID": "[substring(uniqueString(subscription().subscriptionId, resourceGroup().id, variables('vmName')),0,6)]",
     "NicName": "[concat(variables('vmName'),'-nic')]",
     "vnetID": "[resourceId(parameters('vnetGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnet'))]",
@@ -227,15 +233,15 @@
           {
             "name": "default-allow-rdp",
             "properties": {
+              "priority": 1000,
               "description": "Allow RDP",
               "protocol": "Tcp",
-              "sourcePortRange": "*",
-              "destinationPortRange": "3389",
-              "sourceAddressPrefix": "[parameters('remoteAccessACL')]",
-              "destinationAddressPrefix": "*",
               "access": "Allow",
-              "priority": 1000,
-              "direction": "Inbound"
+              "direction": "Inbound",
+              "sourceAddressPrefix": "[parameters('remoteAccessACL')]",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[parameters('customRdpPort')]"
             }
           }
         ]
@@ -245,7 +251,7 @@
       "comments": "## Public IP Address ##",
       "type": "Microsoft.Network/publicIpAddresses",
       "name": "[variables('PublicIpName')]",
-      "apiVersion": "2020-07-01",
+      "apiVersion": "2020-08-01",
       "location": "[resourceGroup().location]",
       "sku": {
         "name": "Basic"
@@ -275,12 +281,13 @@
           {
             "name": "ipconfig1",
             "properties": {
-              "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPName'))]"
-              },
               "subnet": {
                 "id": "[variables('subnetRef')]"
+              },
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[parameters('privateIp')]",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPName'))]"
               }
             }
           }

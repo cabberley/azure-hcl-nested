@@ -29,6 +29,13 @@
       },
       "defaultValue": "Internet"
     },
+    "customRdpPort": {
+      "type": "string",
+      "defaultValue": "3389",
+      "metadata": {
+        "description": "If you wish to use a different port to RDP into the VM (between 0 and 65535), change it here, otherwise, leave the default."
+      }
+    },
     "servicePrincipalObjectId": {
       "metadata": {
         "description": "Object ID of Service Principal"
@@ -66,7 +73,7 @@
               "sourceAddressPrefix": "[parameters('remoteAccessACL')]",
               "sourcePortRange": "*",
               "destinationAddressPrefix": "*",
-              "destinationPortRange": "3389"
+              "destinationPortRange": "[parameters('customRdpPort')]"
             }
           }
         ]
