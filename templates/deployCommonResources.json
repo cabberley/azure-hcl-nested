@@ -45,9 +45,9 @@
     "bastionHost": {
       "type": "object",
       "defaultValue": {
-        "name": "BastionHost",
+        "name": "AzureBastionHost",
         "publicIPAddressName": "bastion-ip",
-        "subnetName": "bastion-subnet",
+        "subnetName": "AzureBastionSubnet",
         "nsgName": "bastion-subnet-nsg",
         "subnetPrefix": "10.0.1.0/29"
       }
@@ -55,9 +55,9 @@
     "azureFirewall": {
       "type": "object",
       "defaultValue": {
-        "name": "Firewall",
+        "name": "AzureFirewall",
         "publicIPAddressName": "firewall-ip",
-        "subnetName": "firewall-subnet",
+        "subnetName": "AzureFirewallSubnet",
         "subnetPrefix": "10.0.3.0/26",
         "routeName": "r-nexthop-to-fw"
       }
@@ -132,7 +132,6 @@
       ]
     },
     "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsConfiguration').workspaceName)]",
-    // "logAnalyticsWorkspace": "[uniqueString(subscription().subscriptionId, resourceGroup().id)]",
     "peering-name-hub-to-spoke-controlplane": "common-hub-to-controlplane-spoke",
     "peering-name-hub-to-spoke-dataplane": "common-hub-to-dataplane-spoke",
     "peering-name-spoke-to-hub-controlplane": "controlplane-spoke-to-common-hub",
