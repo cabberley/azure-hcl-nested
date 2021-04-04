@@ -151,11 +151,19 @@
     }
   },
   "variables": {
+    "centralITgroup": "[concat(parameters('prefix'), '-central-IT')]",
     "controlPlaneGroup": "[concat(parameters('prefix'), '-controlplane')]",
     "dataPlaneGroup": "[concat(parameters('prefix'), '-dataplane')]",
     "dataPlaneGroupArc": "[concat(parameters('prefix'), '-dataplane-arc')]"
   },
   "resources": [
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2020-06-01",
+      "location": "[parameters('location')]",
+      "name": "[variables('centralITgroup')]",
+      "properties": {}
+    },
     {
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2020-06-01",
@@ -195,6 +203,24 @@
           "prefix": {
             "value": "[parameters('prefix')]"
           }
+        }
+      }
+    },
+    {
+      "name": "TemplateCentralIT",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('centralITgroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('centralITgroup'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployCentralIT.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
         }
       }
     },
