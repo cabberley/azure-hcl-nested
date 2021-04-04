@@ -9,28 +9,28 @@
     "hubNetwork": {
       "type": "object",
       "defaultValue": {
-        "name": "vnet-hub",
+        "name": "hub-vnet",
         "addressPrefix": "10.0.0.0/20"
       }
     },
     "controlplaneSpoke": {
       "type": "object",
       "defaultValue": {
-        "name": "vnet-spoke-one",
+        "name": "controlplane-vnet",
         "addressPrefix": "10.100.0.0/16",
-        "subnetName": "snet-spoke-resources",
+        "subnetName": "controlplane-resources",
         "subnetPrefix": "10.100.0.0/16",
-        "subnetNsgName": "nsg-spoke-one-resources"
+        "subnetNsgName": "controlplane-resources-nsg"
       }
     },
     "dataPlaneSpoke": {
       "type": "object",
       "defaultValue": {
-        "name": "vnet-spoke-two",
+        "name": "dataplane-vnet",
         "addressPrefix": "10.200.0.0/16",
-        "subnetName": "snet-spoke-resources",
+        "subnetName": "dataplane-resources",
         "subnetPrefix": "10.200.0.0/16",
-        "subnetNsgName": "nsg-spoke-two-resources"
+        "subnetNsgName": "dataplane-resources-nsg"
       }
     },
     "vpnGateway": {
@@ -39,25 +39,25 @@
         "name": "vgw-gateway",
         "subnetName": "GatewaySubnet",
         "subnetPrefix": "10.0.2.0/27",
-        "pipName": "pip-vgw-gateway"
+        "pipName": "vgw-gateway-pip"
       }
     },
     "bastionHost": {
       "type": "object",
       "defaultValue": {
-        "name": "AzureBastionHost",
-        "publicIPAddressName": "pip-bastion",
-        "subnetName": "AzureBastionSubnet",
-        "nsgName": "nsg-hub-bastion",
+        "name": "BastionHost",
+        "publicIPAddressName": "bastion-pip",
+        "subnetName": "bastion-subnet",
+        "nsgName": "hub-bastion-nsg",
         "subnetPrefix": "10.0.1.0/29"
       }
     },
     "azureFirewall": {
       "type": "object",
       "defaultValue": {
-        "name": "AzureFirewall",
+        "name": "Firewall",
         "publicIPAddressName": "pip-firewall",
-        "subnetName": "AzureFirewallSubnet",
+        "subnetName": "firewall-subnet",
         "subnetPrefix": "10.0.3.0/26",
         "routeName": "r-nexthop-to-fw"
       }
