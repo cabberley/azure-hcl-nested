@@ -39,14 +39,14 @@
         "name": "vgw-gateway",
         "subnetName": "GatewaySubnet",
         "subnetPrefix": "10.0.2.0/27",
-        "pipName": "vgw-gateway-pip"
+        "pipName": "vgw-gateway-ip"
       }
     },
     "bastionHost": {
       "type": "object",
       "defaultValue": {
         "name": "BastionHost",
-        "publicIPAddressName": "bastion-pip",
+        "publicIPAddressName": "bastion-ip",
         "subnetName": "bastion-subnet",
         "nsgName": "hub-bastion-nsg",
         "subnetPrefix": "10.0.1.0/29"
@@ -56,7 +56,7 @@
       "type": "object",
       "defaultValue": {
         "name": "Firewall",
-        "publicIPAddressName": "pip-firewall",
+        "publicIPAddressName": "firewall-ip",
         "subnetName": "firewall-subnet",
         "subnetPrefix": "10.0.3.0/26",
         "routeName": "r-nexthop-to-fw"
