@@ -151,7 +151,7 @@
     }
   },
   "variables": {
-    "commonGroup": "[concat(parameters('prefix'), '-common')]",
+    "commonGroup": "[concat(parameters('prefix'), '-commonresources')]",
     "controlPlaneGroup": "[concat(parameters('prefix'), '-controlplane')]",
     "dataPlaneGroup": "[concat(parameters('prefix'), '-dataplane')]",
     "dataPlaneGroupArc": "[concat(parameters('prefix'), '-dataplane-arc')]"

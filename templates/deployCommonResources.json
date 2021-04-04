@@ -9,14 +9,14 @@
     "hubNetwork": {
       "type": "object",
       "defaultValue": {
-        "name": "common-hub-vnet",
+        "name": "commonresources-vnet-hub",
         "addressPrefix": "10.0.0.0/20"
       }
     },
     "controlPlaneSpoke": {
       "type": "object",
       "defaultValue": {
-        "name": "controlplane-spoke-vnet",
+        "name": "controlplane-vnet-spoke",
         "addressPrefix": "10.100.0.0/16",
         "subnetName": "controlplane-resources",
         "subnetPrefix": "10.100.0.0/16",
@@ -26,7 +26,7 @@
     "dataPlaneSpoke": {
       "type": "object",
       "defaultValue": {
-        "name": "dataplane-spoke-vnet",
+        "name": "dataplane-vnet-spoke",
         "addressPrefix": "10.200.0.0/16",
         "subnetName": "dataplane-resources",
         "subnetPrefix": "10.200.0.0/16",
@@ -46,9 +46,9 @@
       "type": "object",
       "defaultValue": {
         "name": "AzureBastionHost",
-        "publicIPAddressName": "bastion-ip",
+        "publicIPAddressName": "azure-bastion-ip",
         "subnetName": "AzureBastionSubnet",
-        "nsgName": "bastion-subnet-nsg",
+        "nsgName": "AzureBastionSubnet-nsg",
         "subnetPrefix": "10.0.1.0/29"
       }
     },
@@ -56,7 +56,7 @@
       "type": "object",
       "defaultValue": {
         "name": "AzureFirewall",
-        "publicIPAddressName": "firewall-ip",
+        "publicIPAddressName": "azure-firewall-ip",
         "subnetName": "AzureFirewallSubnet",
         "subnetPrefix": "10.0.3.0/26",
         "routeName": "r-nexthop-to-fw"
@@ -284,7 +284,7 @@
       }
     },
     {
-      "comments": "Hub virtual network and diagnostic configuration",
+      "comments": "## Hub Virtual Network & diagnostic configuration ##",
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "2020-05-01",
       "name": "[parameters('hubNetwork').name]",
@@ -338,7 +338,7 @@
       ]
     },
     {
-      "comments": "Subnet for Azure Firewall",
+      "comments": "## Azure Firewall - Subnet ##",
       "type": "Microsoft.Network/virtualNetworks/subnets",
       "apiVersion": "2020-05-01",
       "name": "[concat(parameters('hubNetwork').name, '/', parameters('azureFirewall').subnetName)]",
@@ -350,7 +350,7 @@
       }
     },
     {
-      "comments": "Public IP address for Azure Firewall",
+      "comments": "## Azure Firewall - Public IP Address ##",
       "apiVersion": "2019-11-01",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[parameters('azureFirewall').publicIPAddressName]",
@@ -363,7 +363,7 @@
       }
     },
     {
-      "comments": "Azure Firewall and diagnostic configuration",
+      "comments": "## Azure Firewall & diagnostic configuration ##",
       "type": "Microsoft.Network/azureFirewalls",
       "apiVersion": "2020-05-01",
       "name": "[parameters('azureFirewall').name]",
@@ -423,7 +423,7 @@
       ]
     },
     {
-      "comments": "Route / force tunnel from spokes to Azure firewall",
+      "comments": "## Azure Firewall - Route / force tunnel from spokes to firewall ##",
       "type": "Microsoft.Network/routeTables",
       "apiVersion": "2020-05-01",
       "name": "[parameters('azureFirewall').routeName]",
@@ -446,7 +446,7 @@
       }
     },
     {
-      "comments": "Network security group + rules for controlplane spoke network and diagnostic configuration",
+      "comments": "## ControlPlane Spoke Network - Network security group + rules & diagnostic configuration ##",
       "type": "Microsoft.Network/networkSecurityGroups",
       "apiVersion": "2019-11-01",
       "name": "[parameters('controlPlaneSpoke').subnetNsgName]",
@@ -510,7 +510,7 @@
       ]
     },
     {
-      "comments": "ControlPlane Spoke virtual network, subnet, and diagnostic configuration",
+      "comments": "## ControlPlane Virtual Network, subnet & diagnostic configuration ##",
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "2020-05-01",
       "name": "[parameters('controlPlaneSpoke').name]",
@@ -562,7 +562,7 @@
       ]
     },
     {
-      "comments": "Network security group + rules for DataPlane spoke network and diagnostic configuration",
+      "comments": "## DataPlane Spoke Network - Network security group + rules & diagnostic configuration ##",
       "type": "Microsoft.Network/networkSecurityGroups",
       "apiVersion": "2019-11-01",
       "name": "[parameters('dataPlaneSpoke').subnetNsgName]",
@@ -626,7 +626,7 @@
       ]
     },
     {
-      "comments": "DataPlane Spoke virtual network, subnet, and diagnostic configuration",
+      "comments": "## DataPlane Virtual Network, subnet & diagnostic configuration ##",
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "2020-05-01",
       "name": "[parameters('dataPlaneSpoke').name]",
@@ -678,7 +678,7 @@
       ]
     },
     {
-      "comments": "Virtual network peering hub to spoke ControlPlane",
+      "comments": "## Virtual network peering hub to ControlPlane spoke ##",
       "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
       "apiVersion": "2020-05-01",
       "name": "[concat(parameters('hubNetwork').name, '/', variables('peering-name-hub-to-spoke-controlplane'))]",
@@ -698,7 +698,7 @@
       }
     },
     {
-      "comments": "Virtual network peering hub to spoke DataPlane",
+      "comments": "## Virtual network peering hub to DataPlane spoke ##",
       "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
       "apiVersion": "2020-05-01",
       "name": "[concat(parameters('hubNetwork').name, '/', variables('peering-name-hub-to-spoke-dataplane'))]",
@@ -718,7 +718,7 @@
       }
     },
     {
-      "comments": "Virtual network peering spoke ControlPlane to hub",
+      "comments": "## Virtual network peering ControlPlane spoke to hub ##",
       "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
       "apiVersion": "2020-05-01",
       "name": "[concat(parameters('controlPlaneSpoke').name, '/', variables('peering-name-spoke-to-hub-controlplane'))]",
@@ -738,7 +738,7 @@
       }
     },
     {
-      "comments": "Virtual network peering spoke DataPlane to hub",
+      "comments": "## Virtual network peering DataPlane spoke to hub ##",
       "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
       "apiVersion": "2020-05-01",
       "name": "[concat(parameters('dataPlaneSpoke').name, '/', variables('peering-name-spoke-to-hub-dataplane'))]",
@@ -758,7 +758,7 @@
       }
     },
     {
-      "comments": "Public IP address for Bastion",
+      "comments": "## Public IP address for AzureBastion ##",
       "type": "Microsoft.Network/publicIpAddresses",
       "apiVersion": "2020-05-01",
       "name": "[parameters('bastionHost').publicIPAddressName]",
@@ -771,7 +771,7 @@
       }
     },
     {
-      "comments": "Network security group, rules for Bastion + diagnostic configuration",
+      "comments": "## AzureBastion - Network security group + rules & diagnostic configuration ##",
       "type": "Microsoft.Network/networkSecurityGroups",
       "apiVersion": "2019-11-01",
       "name": "[parameters('bastionHost').nsgName]",
@@ -906,7 +906,7 @@
       ]
     },
     {
-      "comments": "Subnet for Bastion",
+      "comments": "## AzureBastion -- Subnet ##",
       "type": "Microsoft.Network/virtualNetworks/subnets",
       "apiVersion": "2020-05-01",
       "name": "[concat(parameters('hubNetwork').name, '/', parameters('bastionHost').subnetName)]",
@@ -922,7 +922,7 @@
       }
     },
     {
-      "comments": "Azure Bastion and diagnostic configuration",
+      "comments": "## Azure Bastion & diagnostic configuration ##",
       "type": "Microsoft.Network/bastionHosts",
       "apiVersion": "2020-06-01",
       "name": "[parameters('bastionHost').name]",
@@ -968,7 +968,7 @@
       ]
     },
     {
-      "comments": "Public IP address for VPN Gateway",
+      "comments": "## Public IP address for VPN Gateway ##",
       "condition": "[parameters('deployVpnGateway')]",
       "type": "Microsoft.Network/publicIPAddresses",
       "apiVersion": "2019-11-01",
@@ -979,7 +979,7 @@
       }
     },
     {
-      "comments": "VPN Gateway and diagnostic configuration (optional)",
+      "comments": "## VPN Gateway & diagnostic configuration (optional) ##",
       "condition": "[parameters('deployVpnGateway')]",
       "type": "Microsoft.Network/virtualNetworkGateways",
       "apiVersion": "2019-11-01",
@@ -1050,7 +1050,7 @@
       ]
     },
     {
-      "comments": "Azure Firewall Log Analytics workbook",
+      "comments": "## Azure Firewall Log Analytics workbook ##",
       "type": "microsoft.insights/workbooks",
       "apiVersion": "2018-06-17-preview",
       "name": "[parameters('workbookId')]",
