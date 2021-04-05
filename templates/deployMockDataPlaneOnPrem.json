@@ -195,20 +195,6 @@
         "description": "Remote Access CIDR"
       }
     },
-    "adminUserName": {
-      "type": "string",
-      "metadata": {
-        "description": "Domain Admin Account Name also used as Local Machine Admin User"
-      },
-      "minLength": 4
-    },
-    "adminPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Domain Admin Account Password also used as Local Machine Admin User Password"
-      },
-      "minLength": 12
-    },
     "enableDHCP": {
       "type": "string",
       "defaultValue": "Enabled",
