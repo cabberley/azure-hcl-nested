@@ -278,22 +278,22 @@
           "vmSize": {
             "value": "[parameters('serverSize')]"
           },
-          "adminUserName": {
-            "reference": {
-              "keyVault": {
-                "id": "[reference('TemplateDataPlaneArcKeyVault').outputs.keyVault.value.id]"
-              },
-              "secretName": "serverUserName"
-            }
-          },
-          "adminPassword": {
-            "reference": {
-              "keyVault": {
-                "id": "[reference('TemplateDataPlaneArcKeyVault').outputs.keyVault.value.id]"
-              },
-              "secretName": "serverPasword"
-            }
-          },
+          // "adminUserName": {
+          //   "reference": {
+          //     "keyVault": {
+          //       "id": "[reference('TemplateDataPlaneArcKeyVault').outputs.keyVault.value.id]"
+          //     },
+          //     "secretName": "serverUserName"
+          //   }
+          // },
+          // "adminPassword": {
+          //   "reference": {
+          //     "keyVault": {
+          //       "id": "[reference('TemplateDataPlaneArcKeyVault').outputs.keyVault.value.id]"
+          //     },
+          //     "secretName": "serverPasword"
+          //   }
+          // },
           "diagnosticsStorageName": {
             "value": "[reference('TemplateDataPlaneArcStorage').outputs.storageAccount.value.name]"
           },

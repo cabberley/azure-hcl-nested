@@ -28,6 +28,18 @@
         "description": "Service Principal ObjectId that . It is used by Spinnaker to dynamically manage resources."
       }
     },
+    "storageAccountType": {
+      "type": "string",
+      "metadata": {
+        "description": "Account type, premium vs standard, and local, global redundancy"
+      },
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_GRS",
+        "Premium_LRS"
+      ]
+    },
     "serverUserName": {
       "type": "string",
       "metadata": {
@@ -232,6 +244,8 @@
     "cleanPrefix": "[toLower(parameters('prefix'))]",
     "KeyVaultName": "[concat(parameters('prefix'), '-dp-', uniqueString(resourceGroup().id))]",
     "KeyVaultId": "[resourceId('Microsoft.KeyVault/vaults', variables('KeyVaultName'))]",
+    "storageAccountName": "[concat(parameters('prefix'), uniqueString(resourceGroup().id), '2')]",
+    "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
     "vmName": "[concat(variables('cleanPrefix'), '-dp-', parameters('vmName'), '-vm')]",
     "randomGUID": "[substring(uniqueString(subscription().subscriptionId, resourceGroup().id, variables('vmName')),0,6)]",
     "NicName": "[concat(variables('vmName'),'-nic')]",
@@ -346,6 +360,31 @@
           ]
         }
       ]
+    },
+    {
+      "comments": "## Storage Account ##",
+      "name": "[variables('storageAccountName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2019-06-01",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "Storage Account"
+      },
+      "kind": "Storage",
+      "sku": {
+        "name": "[parameters('storageAccountType')]",
+        "tier": "Standard"
+      },
+      "properties": {
+        "encryption": {
+          "keySource": "Microsoft.Storage",
+          "services": {
+            "blob": {
+              "enabled": true
+            }
+          }
+        }
+      }
     },
     {
       "comments": "## Network Security Group ##",
