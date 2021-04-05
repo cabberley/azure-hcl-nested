@@ -14,6 +14,10 @@
       "type": "bool",
       "defaultValue": false
     },
+    "deployHCI": {
+      "type": "bool",
+      "defaultValue": true
+    },
     "location": {
       "type": "string",
       "metadata": {
@@ -192,7 +196,7 @@
       "properties": {}
     },
     {
-      "condition": "[equals(parameters('deployMock'), 'false')]",
+      "condition": "[parameters('deployHCI')]",
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2020-06-01",
       "location": "[parameters('location')]",
@@ -343,47 +347,47 @@
           }
         }
       }
+    },
+    {
+      "name": "TemplateDataPlaneArcVNet",
+      "condition": "[parameters('deployHCI')]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('tempGroupArc')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('tempGroupArc'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployDataPlaneArcVNet.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          },
+          "vnetPrefix": {
+            "value": "[parameters('vnetPrefix')]"
+          },
+          "subnet1Prefix": {
+            "value": "[parameters('subnetCIDR')]"
+          },
+          "remoteAccessACL": {
+            "value": "[parameters('remoteAccessACL')]"
+          },
+          "customRdpPort": {
+            "value": "[parameters('serverRdpPort')]"
+          },
+          "servicePrincipalObjectId": {
+            "value": "[parameters('servicePrincipalObjectId')]"
+          }
+        }
+      }
     }
     // {
-    //   "name": "TemplateDataPlaneArcVNet",
-    //   "condition": "[equals(parameters('deployMock'), 'false')]",
-    //   "type": "Microsoft.Resources/deployments",
-    //   "apiVersion": "2020-10-01",
-    //   "resourceGroup": "[variables('tempGroupArc')]",
-    //   "dependsOn": [
-    //     "[resourceId('Microsoft.Resources/resourceGroups/', variables('tempGroupArc'))]"
-    //   ],
-    //   "properties": {
-    //     "mode": "Incremental",
-    //     "templateLink": {
-    //       "uri": "[concat(parameters('templateURL'), 'deployDataPlaneArcVNet.json')]",
-    //       "contentVersion": "1.0.0.0"
-    //     },
-    //     "parameters": {
-    //       "prefix": {
-    //         "value": "[parameters('prefix')]"
-    //       },
-    //       "vnetPrefix": {
-    //         "value": "[parameters('vnetPrefix')]"
-    //       },
-    //       "subnet1Prefix": {
-    //         "value": "[parameters('subnetCIDR')]"
-    //       },
-    //       "remoteAccessACL": {
-    //         "value": "[parameters('remoteAccessACL')]"
-    //       },
-    //       "customRdpPort": {
-    //         "value": "[parameters('serverRdpPort')]"
-    //       },
-    //       "servicePrincipalObjectId": {
-    //         "value": "[parameters('servicePrincipalObjectId')]"
-    //       }
-    //     }
-    //   }
-    // },
-    // {
     //   "name": "TemplateDataPlaneArcKeyVault",
-    //   "condition": "[equals(parameters('deployMock'), 'false')]",
+    //   "condition": "[parameters('deployHCI')]",
     //   "type": "Microsoft.Resources/deployments",
     //   "apiVersion": "2020-10-01",
     //   "resourceGroup": "[variables('tempGroupArc')]",
@@ -421,7 +425,7 @@
     // },
     // {
     //   "name": "TemplateDataPlaneArcStorage",
-    //   "condition": "[equals(parameters('deployMock'), 'false')]",
+    //   "condition": "[parameters('deployHCI')]",
     //   "type": "Microsoft.Resources/deployments",
     //   "apiVersion": "2020-10-01",
     //   "resourceGroup": "[variables('tempGroupArc')]",
@@ -450,10 +454,10 @@
     //       }
     //     }
     //   }
-    // },
+    // }
     // {
     //   "name": "TemplateDataPlanArcVirtualMachine",
-    //   "condition": "[equals(parameters('deployMock'), 'false')]",
+    //   "condition": "[parameters('deployHCI')]",
     //   "type": "Microsoft.Resources/deployments",
     //   "apiVersion": "2017-05-10",
     //   "resourceGroup": "[variables('tempGroupArc')]",
