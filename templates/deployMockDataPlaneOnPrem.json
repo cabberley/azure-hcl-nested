@@ -189,18 +189,6 @@
         "2019-datacenter-gensecond"
       ]
     },
-    "diagnosticsStorageName": {
-      "type": "string",
-      "metadata": {
-        "description": "Storage Account Name for Diagnostic Logs"
-      }
-    },
-    "diagnosticsStorageKey": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Storage Account Key for Diagnostic Logs"
-      }
-    },
     "remoteAccessACL": {
       "type": "string",
       "metadata": {
@@ -465,7 +453,7 @@
         "diagnosticsProfile": {
           "bootDiagnostics": {
             "enabled": true,
-            "storageUri": "[concat('http://', parameters('diagnosticsStorageName'), '.blob.core.windows.net')]"
+            "storageUri": "[concat('http://', variables('storageAccountName'), '.blob.core.windows.net')]"
           }
         }
       }

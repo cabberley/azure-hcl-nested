@@ -294,12 +294,12 @@
           //     "secretName": "serverPasword"
           //   }
           // },
-          "diagnosticsStorageName": {
-            "value": "[reference('TemplateDataPlaneArcStorage').outputs.storageAccount.value.name]"
-          },
-          "diagnosticsStorageKey": {
-            "value": "[reference('TemplateDataPlaneArcStorage').outputs.storageAccount.value.key]"
-          },
+          // "diagnosticsStorageName": {
+          //   "value": "[reference('TemplateDataPlaneArcStorage').outputs.storageAccount.value.name]"
+          // },
+          // "diagnosticsStorageKey": {
+          //   "value": "[reference('TemplateDataPlaneArcStorage').outputs.storageAccount.value.key]"
+          // },
           "remoteAccessACL": {
             "value": "[parameters('remoteAccessACL')]"
           }
