@@ -1,0 +1,444 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Small unique string."
+      },
+      "minLength": 3,
+      "maxLength": 6
+    },
+    "servicePrincipalClientId": {
+      "type": "string",
+      "metadata": {
+        "description": "Service Principal App ID (also called Client ID) that has contributor rights to the subscription used for this deployment. It is used by Spinnaker to dynamically manage resources."
+      }
+    },
+    "servicePrincipalClientKey": {
+      "type": "string",
+      "metadata": {
+        "description": "Service Principal App Secret (also called Client Key) that has contributor rights to the subscription used for this deployment. It is used by Spinnaker to dynamically manage resources."
+      }
+    },
+    "servicePrincipalObjectId": {
+      "type": "string",
+      "metadata": {
+        "description": "Service Principal ObjectId that . It is used by Spinnaker to dynamically manage resources."
+      }
+    },
+    "serverUserName": {
+      "type": "string",
+      "metadata": {
+        "description": "Server Admin Name."
+      },
+      "minLength": 5
+    },
+    "serverPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Server Admin Password."
+      },
+      "minLength": 10
+    },
+    "vmName": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual Machine 1 Server Name."
+      },
+      "minLength": 2,
+      "maxLength": 4
+    },
+    "domainName": {
+      "type": "string",
+      "defaultValue": "akshci.local",
+      "metadata": {
+        "description": "The FQDN that will be used in the environment"
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "metadata": {
+        "description": "The virtual machine server size."
+      },
+      "defaultValue": "Standard_D16s_v3",
+      "allowedValues": [
+        "Standard_D16s_v3",
+        "Standard_D32s_v3",
+        "Standard_D64s_v3",
+        "Standard_D16s_v4",
+        "Standard_D32s_v4",
+        "Standard_D64s_v4",
+        "Standard_D16d_v4",
+        "Standard_D32d_v4",
+        "Standard_D64d_v4",
+        "Standard_D16ds_v4",
+        "Standard_D32ds_v4",
+        "Standard_D64ds_v4",
+        "Standard_E8s_v3",
+        "Standard_E16s_v3",
+        "Standard_E16-4s_v3",
+        "Standard_E16-8s_v3",
+        "Standard_E20s_v3",
+        "Standard_E32s_v3",
+        "Standard_E32-8s_v3",
+        "Standard_E32-16s_v3",
+        "Standard_E48s_v3",
+        "Standard_E64s_v3",
+        "Standard_E64-16s_v3",
+        "Standard_E64-32s_v3",
+        "Standard_E8s_v4",
+        "Standard_E16s_v4",
+        "Standard_E16-8s_v4",
+        "Standard_E20s_v4",
+        "Standard_E32s_v4",
+        "Standard_E32-8s_v4",
+        "Standard_E32-16s_v4",
+        "Standard_E48s_v4",
+        "Standard_E64s_v4",
+        "Standard_E64-16s_v4",
+        "Standard_E64-32s_v4",
+        "Standard_E8d_v4",
+        "Standard_E16d_v4",
+        "Standard_E20d_v4",
+        "Standard_E32d_v4",
+        "Standard_E48d_v4",
+        "Standard_E64d_v4",
+        "Standard_E8ds_v4",
+        "Standard_E16ds_v4",
+        "Standard_E20ds_v4",
+        "Standard_E32ds_v4",
+        "Standard_E48ds_v4",
+        "Standard_E64ds_v4",
+        "Standard_E64-16ds_v4",
+        "Standard_E64-32ds_v4"
+      ]
+    },
+    "dataDiskSize": {
+      "type": "string",
+      "defaultValue": "128",
+      "allowedValues": [
+        "32",
+        "64",
+        "128",
+        "256",
+        "512",
+        "1024"
+      ],
+      "metadata": {
+        "description": "The size of the individual data disks in GiB. 8 of these will be provisioned therefore 32GiB is the recommended default."
+      }
+    },
+    "dataDiskType": {
+      "type": "string",
+      "defaultValue": "Premium_LRS",
+      "allowedValues": [
+        "StandardSSD_LRS",
+        "Premium_LRS"
+      ],
+      "metadata": {
+        "description": "The Storage type of the VM data disk. If your VM contains an 's' in the VM size, you can select Premium_LRS storage for increased performance, but at a higher cost."
+      }
+    },
+    // "vnetGroup": {
+    //   "type": "string",
+    //   "metadata": {
+    //     "description": "Name of the existing VNET resource group"
+    //   }
+    // },
+    // "vnet": {
+    //   "type": "string",
+    //   "metadata": {
+    //     "description": "Name of the existing VNET"
+    //   }
+    // },
+    "subnet": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Ref to associate VM to."
+      }
+    },
+    "privateIp": {
+      "type": "string",
+      "metadata": {
+        "description": "Private IP to assign to VM."
+      }
+    },
+    "WindowsOSVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The Windows version for the VM."
+      },
+      "defaultValue": "2019-datacenter-gensecond",
+      "allowedValues": [
+        "2019-Datacenter-with-Containers",
+        "2019-Datacenter",
+        "2019-datacenter-gensecond"
+      ]
+    },
+    "diagnosticsStorageName": {
+      "type": "string",
+      "metadata": {
+        "description": "Storage Account Name for Diagnostic Logs"
+      }
+    },
+    "diagnosticsStorageKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Storage Account Key for Diagnostic Logs"
+      }
+    },
+    "remoteAccessACL": {
+      "type": "string",
+      "metadata": {
+        "description": "Remote Access CIDR"
+      }
+    },
+    "adminUserName": {
+      "type": "string",
+      "metadata": {
+        "description": "Domain Admin Account Name also used as Local Machine Admin User"
+      },
+      "minLength": 4
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Domain Admin Account Password also used as Local Machine Admin User Password"
+      },
+      "minLength": 12
+    },
+    "enableDHCP": {
+      "type": "string",
+      "defaultValue": "Enabled",
+      "allowedValues": [
+        "Enabled",
+        "Disabled"
+      ],
+      "metadata": {
+        "description": "Choose whether you wish to enable DHCP in the environment for AKS-HCI testing. If you choose Disabled, it can be enabled after deployment."
+      }
+    },
+    "customRdpPort": {
+      "type": "string",
+      "defaultValue": "3389",
+      "metadata": {
+        "description": "If you wish to use a different port to RDP into the VM (between 0 and 65535), change it here, otherwise, leave the default."
+      }
+    }
+  },
+  "variables": {
+    "cleanPrefix": "[toLower(parameters('prefix'))]",
+    "KeyVaultName": "[concat(parameters('prefix'), '-dp-', uniqueString(resourceGroup().id))]",
+    "KeyVaultId": "[resourceId('Microsoft.KeyVault/vaults', variables('KeyVaultName'))]",
+    "vmName": "[concat(variables('cleanPrefix'), '-dp-', parameters('vmName'), '-vm')]",
+    "randomGUID": "[substring(uniqueString(subscription().subscriptionId, resourceGroup().id, variables('vmName')),0,6)]",
+    "NicName": "[concat(variables('vmName'),'-nic')]",
+    // "vnetID": "[resourceId(parameters('vnetGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnet'))]",
+    // "subnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('subnet'))]",
+    "NsgName": "[concat(variables('vmName'), '-nsg')]",
+    "NsgId": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('NsgName'))]",
+    "PublicIpName": "[concat(variables('vmName'), '-ip')]",
+    "DnsNameForPublicIP": "[toLower(concat(variables('vmName'), variables('randomGUID')))]",
+    "dataDisksCount": 8,
+    "wadlogs": "<WadCfg> <DiagnosticMonitorConfiguration overallQuotaInMB=\"4096\" xmlns=\"http://schemas.microsoft.com/ServiceHosting/2010/10/DiagnosticsConfiguration\"> <DiagnosticInfrastructureLogs scheduledTransferLogLevelFilter=\"Error\"/> <WindowsEventLog scheduledTransferPeriod=\"PT1M\" > <DataSource name=\"Application!*[System[(Level = 1 or Level = 2)]]\" /> <DataSource name=\"Security!*[System[(Level = 1 or Level = 2)]]\" /> <DataSource name=\"System!*[System[(Level = 1 or Level = 2)]]\" /></WindowsEventLog>",
+    "wadperfcounters1": "<PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Processor(_Total)\\% Processor Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU utilization\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor(_Total)\\% Privileged Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU privileged time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor(_Total)\\% User Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU user time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor Information(_Total)\\Processor Frequency\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"CPU frequency\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\System\\Processes\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Processes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Process(_Total)\\Thread Count\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Threads\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Process(_Total)\\Handle Count\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Handles\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\% Committed Bytes In Use\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Memory usage\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\Available Bytes\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\Committed Bytes\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory committed\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\Commit Limit\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory commit limit\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\% Disk Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Disk active time\" locale=\"en-us\"/></PerformanceCounterConfiguration>",
+    "wadperfcounters2": "<PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\% Disk Read Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Disk active read time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\% Disk Write Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Disk active write time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\Disk Transfers/sec\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk operations\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\Disk Reads/sec\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk read operations\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\Disk Writes/sec\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk write operations\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\Disk Bytes/sec\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk speed\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\Disk Read Bytes/sec\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk read speed\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\Disk Write Bytes/sec\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk write speed\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\LogicalDisk(_Total)\\% Free Space\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Disk free space (percentage)\" locale=\"en-us\"/></PerformanceCounterConfiguration></PerformanceCounters>",
+    "wadcfgxstart": "[concat(variables('wadlogs'), variables('wadperfcounters1'), variables('wadperfcounters2'), '<Metrics resourceId=\"')]",
+    "wadmetricsresourceid": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name , '/providers/', 'Microsoft.Compute/virtualMachines/')]",
+    "wadcfgxend": "\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>",
+    "artifactsLocation": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/",
+    "dscUri": "https://github.com/danielscholl/azure-hcl-nested/raw/main/dsc/akshcihost.zip",
+    "environment": "Workgroup"
+  },
+  "resources": [
+    {
+      "comments": "## Key Vault ##",
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "[variables('KeyVaultName')]",
+      "apiVersion": "2019-09-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "sku": {
+          "family": "A",
+          "name": "standard"
+        },
+        "tenantId": "[subscription().tenantId]",
+        "accessPolicies": [
+          {
+            "tenantId": "[subscription().tenantId]",
+            "objectId": "[parameters('servicePrincipalClientId')]",
+            "permissions": {
+              "keys": [
+                "all"
+              ],
+              "secrets": [
+                "all"
+              ]
+            }
+          }
+        ],
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "virtualNetworkRules": [],
+          "ipRules": [],
+          "defaultAction": "Deny"
+        },
+        "enabledForDeployment": true,
+        "enabledForTemplateDeployment": true,
+        "enabledForVolumeEncryption": true
+      },
+      "resources": [
+        {
+          "type": "secrets",
+          "name": "clientId",
+          "apiVersion": "2019-09-01",
+          "properties": {
+            "value": "[parameters('servicePrincipalClientId')]"
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+          ]
+        },
+        {
+          "type": "secrets",
+          "name": "clientSecret",
+          "apiVersion": "2019-09-01",
+          "properties": {
+            "value": "[parameters('servicePrincipalClientKey')]"
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+          ]
+        },
+        {
+          "type": "secrets",
+          "name": "principalId",
+          "apiVersion": "2019-09-01",
+          "properties": {
+            "value": "[parameters('servicePrincipalObjectId')]"
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+          ]
+        },
+        {
+          "type": "secrets",
+          "name": "serverUserName",
+          "apiVersion": "2018-02-14",
+          "properties": {
+            "value": "[parameters('serverUserName')]"
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+          ]
+        },
+        {
+          "type": "secrets",
+          "name": "serverPasword",
+          "apiVersion": "2018-02-14",
+          "properties": {
+            "value": "[parameters('serverPassword')]"
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+          ]
+        }
+      ]
+    },
+    {
+      "comments": "## Network Security Group ##",
+      "name": "[concat(variables('NsgName'))]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2015-05-01-preview",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "Company": "[parameters('prefix')]"
+      },
+      "properties": {
+        "securityRules": [
+          {
+            "name": "default-allow-rdp",
+            "properties": {
+              "priority": 1000,
+              "description": "Allow RDP",
+              "protocol": "Tcp",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "[parameters('remoteAccessACL')]",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[parameters('customRdpPort')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "comments": "## Public IP Address ##",
+      "type": "Microsoft.Network/publicIpAddresses",
+      "name": "[variables('PublicIpName')]",
+      "apiVersion": "2020-08-01",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Basic"
+      },
+      "properties": {
+        "publicIpAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('dnsNameForPublicIP')]"
+        }
+      }
+    },
+    {
+      "comments": "## Network Interface ##",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('NicName')]",
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "Company": "[parameters('prefix')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('PublicIpName'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('NsgName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "subnet": {
+                "id": "[parameters('subnet')]"
+              },
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[parameters('privateIp')]",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPName'))]"
+              }
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+          "id": "[variables('nsgId')]"
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[concat('http://', parameters('diagnosticsStorageName'), '.blob.core.windows.net')]"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "virtualMachine": {
+      "type": "object",
+      "value": {
+        "name": "[variables('vmName')]",
+        "fqdn": "[reference(resourceId('Microsoft.Network/publicIPAddresses',variables('PublicIpName'))).dnsSettings.fqdn]"
+      }
+    }
+  }
+}
