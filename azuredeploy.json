@@ -192,6 +192,7 @@
       "properties": {}
     },
     {
+      "condition": "[equals(parameters('deployMock'), 'false')]",
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2020-06-01",
       "location": "[parameters('location')]",
@@ -342,9 +343,10 @@
           }
         }
       }
-    }
+    },
     {
       "name": "TemplateDataPlaneArcVNet",
+      "condition": "[equals(parameters('deployMock'), 'false')]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-10-01",
       "resourceGroup": "[variables('tempGroupArc')]",
@@ -381,6 +383,7 @@
     },
     {
       "name": "TemplateDataPlaneArcKeyVault",
+      "condition": "[equals(parameters('deployMock'), 'false')]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-10-01",
       "resourceGroup": "[variables('tempGroupArc')]",
@@ -418,6 +421,7 @@
     },
     {
       "name": "TemplateDataPlaneArcStorage",
+      "condition": "[equals(parameters('deployMock'), 'false')]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-10-01",
       "resourceGroup": "[variables('tempGroupArc')]",
@@ -449,6 +453,7 @@
     },
     {
       "name": "TemplateDataPlanArcVirtualMachine",
+      "condition": "[equals(parameters('deployMock'), 'false')]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
       "resourceGroup": "[variables('tempGroupArc')]",
