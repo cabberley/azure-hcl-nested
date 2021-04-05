@@ -10,6 +10,10 @@
       "minLength": 2,
       "maxLength": 5
     },
+    "deployMock": {
+      "type": "bool",
+      "defaultValue": false
+    },
     "location": {
       "type": "string",
       "metadata": {
@@ -154,7 +158,8 @@
     "commonGroup": "[concat(parameters('prefix'), '-commonresources')]",
     "controlPlaneGroup": "[concat(parameters('prefix'), '-controlplane')]",
     "dataPlaneGroup": "[concat(parameters('prefix'), '-dataplane')]",
-    "dataPlaneGroupOnPrem": "[concat(parameters('prefix'), '-mock-dataplane-onprem')]"
+    "dataPlaneGroupOnPrem": "[concat(parameters('prefix'), '-mock-dataplane-onprem')]",
+    "tempGroupArc": "[concat(parameters('prefix'), '-hci-stuff')]"
   },
   "resources": [
     {
@@ -179,10 +184,18 @@
       "properties": {}
     },
     {
+      "condition": "[parameters('deployMock')]",
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2020-06-01",
       "location": "[parameters('location')]",
       "name": "[variables('dataPlaneGroupOnPrem')]",
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2020-06-01",
+      "location": "[parameters('location')]",
+      "name": "[variables('tempGroupArc')]",
       "properties": {}
     },
     {
@@ -226,6 +239,7 @@
     },
     {
       "name": "TemplateMockDataPlaneOnPrem",
+      "condition": "[parameters('deployMock')]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-10-01",
       "resourceGroup": "[variables('dataPlaneGroupOnPrem')]",
@@ -329,178 +343,179 @@
         }
       }
     }
-    // {
-    //   "name": "TemplateDataPlaneArcVNet",
-    //   "type": "Microsoft.Resources/deployments",
-    //   "apiVersion": "2020-10-01",
-    //   "resourceGroup": "[variables('dataPlaneGroupArc')]",
-    //   "dependsOn": [
-    //     "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroupArc'))]"
-    //   ],
-    //   "properties": {
-    //     "mode": "Incremental",
-    //     "templateLink": {
-    //       "uri": "[concat(parameters('templateURL'), 'deployDataPlaneArcVNet.json')]",
-    //       "contentVersion": "1.0.0.0"
-    //     },
-    //     "parameters": {
-    //       "prefix": {
-    //         "value": "[parameters('prefix')]"
-    //       },
-    //       "vnetPrefix": {
-    //         "value": "[parameters('vnetPrefix')]"
-    //       },
-    //       "subnet1Prefix": {
-    //         "value": "[parameters('subnetCIDR')]"
-    //       },
-    //       "remoteAccessACL": {
-    //         "value": "[parameters('remoteAccessACL')]"
-    //       },
-    //       "customRdpPort": {
-    //         "value": "[parameters('serverRdpPort')]"
-    //       },
-    //       "servicePrincipalObjectId": {
-    //         "value": "[parameters('servicePrincipalObjectId')]"
-    //       }
-    //     }
-    //   }
-    // },
-    // {
-    //   "name": "TemplateDataPlaneArcKeyVault",
-    //   "type": "Microsoft.Resources/deployments",
-    //   "apiVersion": "2020-10-01",
-    //   "resourceGroup": "[variables('dataPlaneGroupArc')]",
-    //   "dependsOn": [
-    //     "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroupArc'))]",
-    //     "TemplateDataPlaneArcVNet"
-    //   ],
-    //   "properties": {
-    //     "mode": "Incremental",
-    //     "templateLink": {
-    //       "uri": "[concat(parameters('templateURL'), 'deployDataPlaneArcKeyVault.json')]",
-    //       "contentVersion": "1.0.0.0"
-    //     },
-    //     "parameters": {
-    //       "prefix": {
-    //         "value": "[parameters('prefix')]"
-    //       },
-    //       "servicePrincipalClientId": {
-    //         "value": "[parameters('servicePrincipalClientId')]"
-    //       },
-    //       "servicePrincipalClientKey": {
-    //         "value": "[parameters('servicePrincipalClientKey')]"
-    //       },
-    //       "servicePrincipalObjectId": {
-    //         "value": "[parameters('servicePrincipalObjectId')]"
-    //       },
-    //       "serverUserName": {
-    //         "value": "[parameters('serverUserName')]"
-    //       },
-    //       "serverPassword": {
-    //         "value": "[parameters('serverPassword')]"
-    //       }
-    //     }
-    //   }
-    // },
-    // {
-    //   "name": "TemplateDataPlaneArcStorage",
-    //   "type": "Microsoft.Resources/deployments",
-    //   "apiVersion": "2020-10-01",
-    //   "resourceGroup": "[variables('dataPlaneGroupArc')]",
-    //   "dependsOn": [
-    //     "TemplateDataPlaneArcVNet"
-    //   ],
-    //   "properties": {
-    //     "mode": "Incremental",
-    //     "templateLink": {
-    //       "uri": "[concat(parameters('templateURL'), 'deployDataPlaneArcStorage.json')]",
-    //       "contentVersion": "1.0.0.0"
-    //     },
-    //     "parameters": {
-    //       "prefix": {
-    //         "value": "[parameters('prefix')]"
-    //       },
-    //       "storageAccountType": {
-    //         "value": "Standard_LRS"
-    //       },
-    //       "vnetName": {
-    //         "value": "[reference('TemplateDataPlaneArcVNet').outputs.virtualNetwork.value.name]"
-    //       },
-    //       "subnet": {
-    //         "value": "[reference('TemplateDataPlaneArcVNet').outputs.subnets.value.name]"
-    //       }
-    //     }
-    //   }
-    // }
-    // {
-    //   "name": "TemplateDataPlanArcVirtualMachine",
-    //   "type": "Microsoft.Resources/deployments",
-    //   "apiVersion": "2017-05-10",
-    //   "resourceGroup": "[variables('dataPlaneGroupArc')]",
-    //   "dependsOn": [
-    //     "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroupArc'))]",
-    //     "TemplateDataPlaneArcVNet",
-    //     "TemplateDataPlaneKeyVault"
-    //   ],
-    //   "properties": {
-    //     "mode": "Incremental",
-    //     "templateLink": {
-    //       "uri": "[concat(parameters('templateURL'), 'deployDataPlaneArcVirtualMachine.json')]",
-    //       "contentVersion": "1.0.0.0"
-    //     },
-    //     "parameters": {
-    //       "prefix": {
-    //         "value": "[parameters('prefix')]"
-    //       },
-    //       "vmName": {
-    //         "value": "hci"
-    //       },
-    //       "vnetGroup": {
-    //         "value": "[variables('dataPlaneGroupArc')]"
-    //       },
-    //       "vnet": {
-    //         "value": "[reference('TemplateDataPlaneArcVNet').outputs.virtualNetwork.value.name]"
-    //       },
-    //       "subnet": {
-    //         "value": "[reference('TemplateDataPlaneArcVNet').outputs.subnets.value.name]"
-    //       },
-    //       "privateIp": {
-    //         "value": "[parameters('serverPrivateIp')]"
-    //       },
-    //       "customRdpPort": {
-    //         "value": "[parameters('serverRdpPort')]"
-    //       },
-    //       "vmSize": {
-    //         "value": "[parameters('serverSize')]"
-    //       },
-    //       "adminUserName": {
-    //         "reference": {
-    //           "keyVault": {
-    //             "id": "[reference('TemplateDataPlaneArcKeyVault').outputs.keyVault.value.id]"
-    //           },
-    //           "secretName": "serverUserName"
-    //         }
-    //       },
-    //       "adminPassword": {
-    //         "reference": {
-    //           "keyVault": {
-    //             "id": "[reference('TemplateDataPlaneArcKeyVault').outputs.keyVault.value.id]"
-    //           },
-    //           "secretName": "serverPasword"
-    //         }
-    //       },
-    //       "diagnosticsStorageName": {
-    //         "value": "[reference('TemplateDataPlaneArcStorage').outputs.storageAccount.value.name]"
-    //       },
-    //       "diagnosticsStorageKey": {
-    //         "value": "[reference('TemplateDataPlaneArcStorage').outputs.storageAccount.value.key]"
-    //       },
-    //       "remoteAccessACL": {
-    //         "value": "[parameters('remoteAccessACL')]"
-    //       }
-    //     }
-    //   }
-    // }
+    {
+      "name": "TemplateDataPlaneArcVNet",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('tempGroupArc')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('tempGroupArc'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployDataPlaneArcVNet.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          },
+          "vnetPrefix": {
+            "value": "[parameters('vnetPrefix')]"
+          },
+          "subnet1Prefix": {
+            "value": "[parameters('subnetCIDR')]"
+          },
+          "remoteAccessACL": {
+            "value": "[parameters('remoteAccessACL')]"
+          },
+          "customRdpPort": {
+            "value": "[parameters('serverRdpPort')]"
+          },
+          "servicePrincipalObjectId": {
+            "value": "[parameters('servicePrincipalObjectId')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "TemplateDataPlaneArcKeyVault",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('tempGroupArc')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('tempGroupArc'))]",
+        "TemplateDataPlaneArcVNet"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployDataPlaneArcKeyVault.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          },
+          "servicePrincipalClientId": {
+            "value": "[parameters('servicePrincipalClientId')]"
+          },
+          "servicePrincipalClientKey": {
+            "value": "[parameters('servicePrincipalClientKey')]"
+          },
+          "servicePrincipalObjectId": {
+            "value": "[parameters('servicePrincipalObjectId')]"
+          },
+          "serverUserName": {
+            "value": "[parameters('serverUserName')]"
+          },
+          "serverPassword": {
+            "value": "[parameters('serverPassword')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "TemplateDataPlaneArcStorage",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('tempGroupArc')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('tempGroupArc'))]",
+        "TemplateDataPlaneArcVNet"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployDataPlaneArcStorage.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          },
+          "storageAccountType": {
+            "value": "Standard_LRS"
+          },
+          "vnetName": {
+            "value": "[reference('TemplateDataPlaneArcVNet').outputs.virtualNetwork.value.name]"
+          },
+          "subnet": {
+            "value": "[reference('TemplateDataPlaneArcVNet').outputs.subnets.value.name]"
+          }
+        }
+      }
+    },
+    {
+      "name": "TemplateDataPlanArcVirtualMachine",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "resourceGroup": "[variables('tempGroupArc')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('tempGroupArc'))]",
+        "TemplateDataPlaneArcVNet",
+        "TemplateDataPlaneKeyVault"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployDataPlaneArcVirtualMachine.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          },
+          "vmName": {
+            "value": "hci"
+          },
+          "vnetGroup": {
+            "value": "[variables('tempGroupArc')]"
+          },
+          "vnet": {
+            "value": "[reference('TemplateDataPlaneArcVNet').outputs.virtualNetwork.value.name]"
+          },
+          "subnet": {
+            "value": "[reference('TemplateDataPlaneArcVNet').outputs.subnets.value.name]"
+          },
+          "privateIp": {
+            "value": "[parameters('serverPrivateIp')]"
+          },
+          "customRdpPort": {
+            "value": "[parameters('serverRdpPort')]"
+          },
+          "vmSize": {
+            "value": "[parameters('serverSize')]"
+          },
+          "adminUserName": {
+            "reference": {
+              "keyVault": {
+                "id": "[reference('TemplateDataPlaneArcKeyVault').outputs.keyVault.value.id]"
+              },
+              "secretName": "serverUserName"
+            }
+          },
+          "adminPassword": {
+            "reference": {
+              "keyVault": {
+                "id": "[reference('TemplateDataPlaneArcKeyVault').outputs.keyVault.value.id]"
+              },
+              "secretName": "serverPasword"
+            }
+          },
+          "diagnosticsStorageName": {
+            "value": "[reference('TemplateDataPlaneArcStorage').outputs.storageAccount.value.name]"
+          },
+          "diagnosticsStorageKey": {
+            "value": "[reference('TemplateDataPlaneArcStorage').outputs.storageAccount.value.key]"
+          },
+          "remoteAccessACL": {
+            "value": "[parameters('remoteAccessACL')]"
+          }
+        }
+      }
+    }
   ],
   "outputs": {}
 }
