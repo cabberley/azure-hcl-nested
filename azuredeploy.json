@@ -260,12 +260,9 @@
           "vmName": {
             "value": "hci"
           },
-          // "vnetGroup": {
-          //   "value": "[variables('dataPlaneGroupOnPrem')]"
-          // },
-          // "vnet": {
-          //   "value": "[reference('TemplateDataPlaneArcVNet').outputs.virtualNetwork.value.name]"
-          // },
+          "vmSize": {
+            "value": "[parameters('serverSize')]"
+          },
           "subnet": {
             "value": "[reference('TemplateCommon').outputs.dataPlaneNetwork.value.subnetId]"
           },
@@ -275,31 +272,6 @@
           "customRdpPort": {
             "value": "[parameters('serverRdpPort')]"
           },
-          "vmSize": {
-            "value": "[parameters('serverSize')]"
-          },
-          // "adminUserName": {
-          //   "reference": {
-          //     "keyVault": {
-          //       "id": "[reference('TemplateDataPlaneArcKeyVault').outputs.keyVault.value.id]"
-          //     },
-          //     "secretName": "serverUserName"
-          //   }
-          // },
-          // "adminPassword": {
-          //   "reference": {
-          //     "keyVault": {
-          //       "id": "[reference('TemplateDataPlaneArcKeyVault').outputs.keyVault.value.id]"
-          //     },
-          //     "secretName": "serverPasword"
-          //   }
-          // },
-          // "diagnosticsStorageName": {
-          //   "value": "[reference('TemplateDataPlaneArcStorage').outputs.storageAccount.value.name]"
-          // },
-          // "diagnosticsStorageKey": {
-          //   "value": "[reference('TemplateDataPlaneArcStorage').outputs.storageAccount.value.key]"
-          // },
           "remoteAccessACL": {
             "value": "[parameters('remoteAccessACL')]"
           }

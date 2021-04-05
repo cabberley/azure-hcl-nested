@@ -153,18 +153,6 @@
         "description": "The Storage type of the VM data disk. If your VM contains an 's' in the VM size, you can select Premium_LRS storage for increased performance, but at a higher cost."
       }
     },
-    // "vnetGroup": {
-    //   "type": "string",
-    //   "metadata": {
-    //     "description": "Name of the existing VNET resource group"
-    //   }
-    // },
-    // "vnet": {
-    //   "type": "string",
-    //   "metadata": {
-    //     "description": "Name of the existing VNET"
-    //   }
-    // },
     "subnet": {
       "type": "string",
       "metadata": {
@@ -223,8 +211,6 @@
     "vmName": "[concat(variables('cleanPrefix'), '-dp-', parameters('vmName'), '-vm')]",
     "randomGUID": "[substring(uniqueString(subscription().subscriptionId, resourceGroup().id, variables('vmName')),0,6)]",
     "NicName": "[concat(variables('vmName'),'-nic')]",
-    // "vnetID": "[resourceId(parameters('vnetGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnet'))]",
-    // "subnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('subnet'))]",
     "NsgName": "[concat(variables('vmName'), '-nsg')]",
     "NsgId": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('NsgName'))]",
     "PublicIpName": "[concat(variables('vmName'), '-ip')]",
@@ -443,6 +429,207 @@
           }
         }
       }
+    },
+    {
+      "comments": "## Virtual Machine ##",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('vmName')]",
+      "apiVersion": "2020-06-01",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "Company": "[parameters('prefix')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('NicName'))]"
+      ],
+      "properties": {
+        "osProfile": {
+          "computerName": "[variables('vmName')]",
+          "adminUsername": "[parameters('serverUserName')]",
+          "adminPassword": "[parameters('serverPassword')]",
+          "windowsConfiguration": {
+            "provisionVmAgent": true
+          }
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "[parameters('WindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "Standard_LRS"
+            }
+          },
+          "copy": [
+            {
+              "name": "dataDisks",
+              "count": "[variables('dataDisksCount')]",
+              "input": {
+                "name": "[concat(parameters('vmName'),'DataDisk',copyIndex('dataDisks'))]",
+                "diskSizeGB": "[parameters('dataDiskSize')]",
+                "lun": "[copyIndex('dataDisks')]",
+                "createOption": "Empty",
+                "caching": "None",
+                "managedDisk": {
+                  "storageAccountType": "[parameters('dataDiskType')]"
+                }
+              }
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('NicName'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[concat('http://', variables('storageAccountName'), '.blob.core.windows.net')]"
+          }
+        }
+      },
+      "resources": [
+        {
+          "type": "extensions",
+          "name": "InstallWAC",
+          "apiVersion": "2018-06-01",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[variables('vmName')]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "typeHandlerVersion": "1.10",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[uri(variables('artifactsLocation'), concat('scripts/installWac.ps1'))]"
+              ]
+            },
+            "protectedSettings": {
+              "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File installWac.ps1', ' -userName ', parameters('serverUserName'))]"
+            }
+          }
+        },
+        {
+          "type": "extensions",
+          "name": "ConfigureAksHciHost",
+          "apiVersion": "2020-06-01",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[variables('vmName')]",
+            "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('vmName'), 'InstallWAC')]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Powershell",
+            "type": "DSC",
+            "typeHandlerVersion": "2.77",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "wmfVersion": "latest",
+              "configuration": {
+                "url": "[variables('dscUri')]",
+                "script": "akshcihost.ps1",
+                "function": "AKSHCIHost"
+              },
+              "configurationArguments": {
+                "DomainName": "[parameters('domainName')]",
+                "environment": "[variables('environment')]",
+                "enableDHCP": "[parameters('enableDHCP')]",
+                "customRdpPort": "[parameters('customRdpPort')]"
+              }
+            },
+            "protectedSettings": {
+              "configurationArguments": {
+                "adminCreds": {
+                  "UserName": "[parameters('serverUserName')]",
+                  "Password": "[parameters('serverPassword')]"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Microsoft.Compute.BGInfoExtension",
+          "type": "extensions",
+          "apiVersion": "2016-04-30-preview",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[variables('vmName')]"
+          ],
+          "tags": {
+            "displayName": "BGInfoExtension"
+          },
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "BGInfo",
+            "typeHandlerVersion": "2.1",
+            "autoUpgradeMinorVersion": true,
+            "settings": {},
+            "protectedSettings": null
+          }
+        },
+        {
+          "name": "Microsoft.Insights.VMDiagnosticsSettings",
+          "type": "extensions",
+          "apiVersion": "2016-04-30-preview",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[variables('vmName')]"
+          ],
+          "tags": {
+            "displayName": "AzureDiagnostics"
+          },
+          "properties": {
+            "publisher": "Microsoft.Azure.Diagnostics",
+            "type": "IaaSDiagnostics",
+            "typeHandlerVersion": "1.5",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "xmlCfg": "[base64(concat(variables('wadcfgxstart'), variables('wadmetricsresourceid'), variables('vmName'), variables('wadcfgxend')))]",
+              "storageAccount": "[variables('storageAccountName')]"
+            },
+            "protectedSettings": {
+              "storageAccountName": "[variables('storageAccountName')]",
+              "storageAccountKey": "[listKeys(variables('storageId'), '2016-01-01').keys[0].value]"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "comments": "## Auto Shutdown ##",
+      "name": "[concat('shutdown-computevm-', variables('vmName'))]",
+      "type": "microsoft.devtestlab/schedules",
+      "apiVersion": "2018-09-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "status": "Enabled",
+        "taskType": "ComputeVmShutdownTask",
+        "dailyRecurrence": {
+          "time": "1800"
+        },
+        "timeZoneId": "Central Standard Time",
+        "notificationSettings": {
+          "status": "Disabled",
+          "timeInMinutes": 30
+        },
+        "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', variables('vmname'))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', variables('vmname'))]"
+      ]
     }
   ],
   "outputs": {
@@ -451,6 +638,12 @@
       "value": {
         "name": "[variables('vmName')]",
         "fqdn": "[reference(resourceId('Microsoft.Network/publicIPAddresses',variables('PublicIpName'))).dnsSettings.fqdn]"
+      }
+    },
+    "keyVault": {
+      "type": "object",
+      "value": {
+        "id": "[variables('KeyVaultId')]"
       }
     }
   }
