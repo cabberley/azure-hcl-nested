@@ -530,6 +530,7 @@
             "name": "[parameters('controlPlaneSpoke').subnetName]",
             "properties": {
               "addressPrefix": "[parameters('controlPlaneSpoke').subnetPrefix]",
+              "privateEndpointNetworkPolicies": "Disabled",
               "networkSecurityGroup": {
                 "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('controlPlaneSpoke').subnetNsgName)]"
               },
@@ -646,6 +647,7 @@
             "name": "[parameters('dataPlaneSpoke').subnetName]",
             "properties": {
               "addressPrefix": "[parameters('dataPlaneSpoke').subnetPrefix]",
+              "privateEndpointNetworkPolicies": "Disabled",
               "networkSecurityGroup": {
                 "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('dataPlaneSpoke').subnetNsgName)]"
               },
