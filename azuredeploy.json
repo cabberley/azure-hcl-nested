@@ -16,7 +16,7 @@
     },
     "deployHCI": {
       "type": "bool",
-      "defaultValue": true
+      "defaultValue": false
     },
     "location": {
       "type": "string",
@@ -162,7 +162,7 @@
     "commonGroup": "[concat(parameters('prefix'), '-commonresources')]",
     "controlPlaneGroup": "[concat(parameters('prefix'), '-controlplane')]",
     "dataPlaneGroup": "[concat(parameters('prefix'), '-dataplane')]",
-    "dataPlaneGroupOnPrem": "[concat(parameters('prefix'), '-mock-dataplane-onprem')]",
+    "dataPlaneGroupOnPrem": "[concat(parameters('prefix'), '-onprem-mock')]",
     "tempGroupArc": "[concat(parameters('prefix'), '-hci-stuff')]"
   },
   "resources": [
