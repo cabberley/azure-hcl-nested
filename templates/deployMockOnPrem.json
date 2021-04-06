@@ -155,8 +155,8 @@
   },
   "variables": {
     "cleanPrefix": "[toLower(parameters('prefix'))]",
+    "location": "[variables('location')]",
     "storageAccountName": "[concat(parameters('prefix'), uniqueString(resourceGroup().id), '2')]",
-    "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
     "vmName": "[concat(variables('cleanPrefix'), '-dp-', parameters('vmName'), '-vm')]",
     "NicName": "[concat(variables('vmName'),'-nic')]",
     "windowsOSVersion": "2019-datacenter-gensecond",
@@ -193,7 +193,7 @@
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "2020-05-01",
       "name": "[parameters('mocOnpremNetwork').name]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
@@ -228,7 +228,7 @@
       "type": "Microsoft.Network/publicIPAddresses",
       "apiVersion": "2019-11-01",
       "name": "[parameters('mocOnpremGateway').publicIPAddressName]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "properties": {
         "publicIPAllocationMethod": "Dynamic"
       }
@@ -239,7 +239,7 @@
       "type": "Microsoft.Network/virtualNetworkGateways",
       "apiVersion": "2019-11-01",
       "name": "[parameters('mocOnpremGateway').name]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', parameters('mocOnpremNetwork').name)]",
         "[resourceId('Microsoft.Network/publicIPAddresses', parameters('mocOnpremGateway').publicIPAddressName)]"
@@ -273,7 +273,7 @@
       "type": "Microsoft.Network/publicIpAddresses",
       "apiVersion": "2020-05-01",
       "name": "[parameters('bastionHost').publicIPAddressName]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "sku": {
         "name": "Standard"
       },
@@ -286,7 +286,7 @@
       "type": "Microsoft.Network/networkSecurityGroups",
       "apiVersion": "2019-11-01",
       "name": "[parameters('bastionHost').nsgName]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "properties": {
         "securityRules": [
           {
@@ -397,7 +397,7 @@
       "type": "Microsoft.Network/bastionHosts",
       "apiVersion": "2020-06-01",
       "name": "[parameters('bastionHost').name]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', parameters('mocOnpremNetwork').name)]",
         "[resourceId('Microsoft.Network/publicIpAddresses', parameters('bastionHost').publicIPAddressName)]"
@@ -423,7 +423,7 @@
       "type": "Microsoft.Network/networkInterfaces",
       "apiVersion": "2020-05-01",
       "name": "[variables('NicName')]",
-      "location": "[parameters('location')]",
+      "location": "[variables('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', parameters('mocOnpremNetwork').name)]"
       ],
