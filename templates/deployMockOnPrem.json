@@ -586,29 +586,6 @@
         },
         {
           "type": "extensions",
-          "name": "InstallWAC",
-          "apiVersion": "2018-06-01",
-          "location": "[resourceGroup().location]",
-          "dependsOn": [
-            "[variables('vmName')]"
-          ],
-          "properties": {
-            "publisher": "Microsoft.Compute",
-            "type": "CustomScriptExtension",
-            "typeHandlerVersion": "1.10",
-            "autoUpgradeMinorVersion": true,
-            "settings": {
-              "fileUris": [
-                "[uri(variables('artifactsLocation'), concat('scripts/installWac.ps1'))]"
-              ]
-            },
-            "protectedSettings": {
-              "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File installWac.ps1', ' -userName ', parameters('adminUserName'))]"
-            }
-          }
-        },
-        {
-          "type": "extensions",
           "name": "ConfigureAksHciHost",
           "apiVersion": "2020-06-01",
           "location": "[resourceGroup().location]",
