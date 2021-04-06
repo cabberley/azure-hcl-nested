@@ -12,7 +12,7 @@
     },
     "deployMock": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": true
     },
     "deployHCI": {
       "type": "bool",
