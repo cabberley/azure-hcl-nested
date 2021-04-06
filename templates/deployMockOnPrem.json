@@ -162,7 +162,7 @@
         "description": "If you wish to use a different port to RDP into the VM (between 0 and 65535), change it here, otherwise, leave the default."
       }
     },
-    "configureSitetoSite": {
+    "configureSitetosite": {
       "type": "bool",
       "defaultValue": false
     },
@@ -258,7 +258,7 @@
     },
     {
       "comments": "## Public IP address for VPN Gateway ##",
-      "condition": "[parameters('configureSitetoSite')]",
+      "condition": "[parameters('configureSitetosite')]",
       "type": "Microsoft.Network/publicIPAddresses",
       "apiVersion": "2019-11-01",
       "name": "[parameters('mocOnpremGateway').publicIPAddressName]",
@@ -269,7 +269,7 @@
     },
     {
       "comments": "## VPN Gateway ##",
-      "condition": "[parameters('configureSitetoSite')]",
+      "condition": "[parameters('configureSitetosite')]",
       "type": "Microsoft.Network/virtualNetworkGateways",
       "apiVersion": "2019-11-01",
       "name": "[parameters('mocOnpremGateway').name]",

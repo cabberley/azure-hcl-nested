@@ -10,7 +10,7 @@
       "minLength": 2,
       "maxLength": 5
     },
-    "configureSitetoSite": {
+    "configureSitetosite": {
       "type": "bool",
       "defaultValue": true
     },
@@ -208,8 +208,8 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "configureSitetoSite": {
-            "value": "[parameters('configureSitetoSite')]"
+          "configureSitetosite": {
+            "value": "[parameters('configureSitetosite')]"
           }
         }
       }
@@ -245,7 +245,7 @@
           "vmSize": {
             "value": "[parameters('serverSize')]"
           },
-          "configureSitetoSite": {
+          "configureSitetosite": {
             "value": "true"
           }
         }
