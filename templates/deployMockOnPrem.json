@@ -182,7 +182,7 @@
     "cleanPrefix": "[toLower(parameters('prefix'))]",
     "storageAccountName": "[concat(parameters('prefix'), uniqueString(resourceGroup().id), '2')]",
     "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
-    "vmName": "[concat(variables('cleanPrefix'), '-dp-', parameters('vmName'), '-vm')]",
+    "vmName": "[concat(variables('cleanPrefix'), parameters('vmName'), '-vm')]",
     "NicName": "[concat(variables('vmName'),'-nic')]",
     "windowsOSVersion": "2019-datacenter-gensecond",
     "dataDisksCount": 8,
@@ -514,7 +514,7 @@
               "name": "dataDisks",
               "count": "[variables('dataDisksCount')]",
               "input": {
-                "name": "[concat(parameters('vmName'),'DataDisk',copyIndex('dataDisks'))]",
+                "name": "[concat(variables('vmName'),'-DataDisk',copyIndex('dataDisks'))]",
                 "diskSizeGB": "[parameters('dataDiskSize')]",
                 "lun": "[copyIndex('dataDisks')]",
                 "createOption": "Empty",
