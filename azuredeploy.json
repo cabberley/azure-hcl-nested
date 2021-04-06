@@ -10,10 +10,6 @@
       "minLength": 2,
       "maxLength": 5
     },
-    "configureSitetosite": {
-      "type": "bool",
-      "defaultValue": true
-    },
     "deployMock": {
       "type": "bool",
       "defaultValue": true
@@ -183,11 +179,7 @@
           "uri": "[concat(parameters('templateURL'), 'deployCentralResources.json')]",
           "contentVersion": "1.0.0.0"
         },
-        "parameters": {
-          "configureSitetosite": {
-            "value": "[parameters('configureSitetosite')]"
-          }
-        }
+        "parameters": {}
       }
     },
     {
@@ -209,9 +201,6 @@
         "parameters": {
           "prefix": {
             "value": "[parameters('prefix')]"
-          },
-          "configureSitetosite": {
-            "value": "[parameters('configureSitetosite')]"
           },
           "adminUsername": {
             "value": "[parameters('serverUserName')]"
@@ -332,14 +321,8 @@
           "prefix": {
             "value": "[parameters('prefix')]"
           },
-          "servicePrincipalClientId": {
-            "value": "[parameters('servicePrincipalClientId')]"
-          },
-          "servicePrincipalClientKey": {
-            "value": "[parameters('servicePrincipalClientKey')]"
-          },
-          "servicePrincipalObjectId": {
-            "value": "[parameters('servicePrincipalObjectId')]"
+          "subnet": {
+            "value": "[reference('TemplateCentralIT').outputs.dataPlaneNetwork.value.subnetId]"
           }
         }
       }

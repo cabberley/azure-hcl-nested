@@ -4,7 +4,7 @@
   "parameters": {
     "configureSitetosite": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": true
     },
     "hubNetwork": {
       "type": "object",

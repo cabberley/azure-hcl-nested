@@ -10,6 +10,10 @@
       "minLength": 3,
       "maxLength": 6
     },
+    "configureSitetosite": {
+      "type": "bool",
+      "defaultValue": true
+    },
     "storageAccountType": {
       "type": "string",
       "metadata": {
@@ -161,10 +165,6 @@
       "metadata": {
         "description": "If you wish to use a different port to RDP into the VM (between 0 and 65535), change it here, otherwise, leave the default."
       }
-    },
-    "configureSitetosite": {
-      "type": "bool",
-      "defaultValue": false
     },
     "enableDHCP": {
       "type": "string",
