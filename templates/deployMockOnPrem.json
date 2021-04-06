@@ -155,7 +155,7 @@
   },
   "variables": {
     "cleanPrefix": "[toLower(parameters('prefix'))]",
-    "location": "[variables('location')]",
+    "location": "[resourceGroup().location]",
     "storageAccountName": "[concat(parameters('prefix'), uniqueString(resourceGroup().id), '2')]",
     "vmName": "[concat(variables('cleanPrefix'), '-dp-', parameters('vmName'), '-vm')]",
     "NicName": "[concat(variables('vmName'),'-nic')]",
