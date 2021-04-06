@@ -1098,6 +1098,22 @@
         "name": "[variables('logAnalyticsConfiguration').workspaceName]",
         "key": "[listKeys(variables('workspaceId'), '2015-11-01-preview').primarySharedKey]"
       }
+    },
+    "vpnIp": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/virtualNetworkGateways', parameters('vpnGateway').name)).bgpSettings.bgpPeeringAddresses[0].tunnelIpAddresses[0]]"
+    },
+    "mocOnpremNetwork": {
+      "type": "string",
+      "value": "[parameters('hubNetwork').addressPrefix]"
+    },
+    "spokeNetworkAddressPrefix": {
+      "type": "string",
+      "value": "[parameters('controlPlaneSpoke').addressPrefix]"
+    },
+    "azureGatewayName": {
+      "type": "string",
+      "value": "[parameters('vpnGateway').name]"
     }
   }
 }
