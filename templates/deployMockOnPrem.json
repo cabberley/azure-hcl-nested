@@ -675,17 +675,5 @@
     }
   ],
   "outputs": {
-    // "vpnIp": {
-    //   "type": "string",
-    //   "value": "[reference(resourceId('Microsoft.Network/virtualNetworkGateways', parameters('mocOnpremGateway').name)).bgpSettings.bgpPeeringAddresses[0].tunnelIpAddresses[0]]"
-    // },
-    "mocOnpremNetworkPrefix": {
-      "type": "string",
-      "value": "[parameters('mocOnpremNetwork').addressPrefix]"
-    },
-    "mocOnpremGatewayName": {
-      "type": "string",
-      "value": "[parameters('mocOnpremGateway').name]"
-    }
   }
 }
