@@ -210,6 +210,9 @@
           "prefix": {
             "value": "[parameters('prefix')]"
           },
+          "configureSitetosite": {
+            "value": "[parameters('configureSitetosite')]"
+          },
           "adminUsername": {
             "value": "[parameters('serverUserName')]"
           },
@@ -221,9 +224,6 @@
           },
           "vmSize": {
             "value": "[parameters('serverSize')]"
-          },
-          "configureSitetosite": {
-            "value": "true"
           }
         }
       }
