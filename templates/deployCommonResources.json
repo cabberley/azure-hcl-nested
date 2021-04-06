@@ -2,9 +2,9 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "deployVpnGateway": {
+    "configureSitetoSite": {
       "type": "bool",
-      "defaultValue": true
+      "defaultValue": false
     },
     "hubNetwork": {
       "type": "object",
@@ -969,7 +969,7 @@
     },
     {
       "comments": "## Public IP address for VPN Gateway ##",
-      "condition": "[parameters('deployVpnGateway')]",
+      "condition": "[parameters('configureSitetosite')]",
       "type": "Microsoft.Network/publicIPAddresses",
       "apiVersion": "2019-11-01",
       "name": "[parameters('vpnGateway').pipName]",
@@ -980,7 +980,7 @@
     },
     {
       "comments": "## VPN Gateway & diagnostic configuration (optional) ##",
-      "condition": "[parameters('deployVpnGateway')]",
+      "condition": "[parameters('configureSitetosite')]",
       "type": "Microsoft.Network/virtualNetworkGateways",
       "apiVersion": "2019-11-01",
       "name": "[parameters('vpnGateway').name]",
@@ -1014,7 +1014,7 @@
       },
       "resources": [
         {
-          "condition": "[parameters('deployVpnGateway')]",
+          "condition": "[parameters('configureSitetosite')]",
           "type": "providers/diagnosticSettings",
           "apiVersion": "2017-05-01-preview",
           "name": "[concat('Microsoft.Insights/default', variables('logAnalyticsConfiguration').workspaceName)]",

@@ -10,13 +10,17 @@
       "minLength": 2,
       "maxLength": 5
     },
+    "configureSitetoSite": {
+      "type": "bool",
+      "defaultValue": true
+    },
     "deployMock": {
       "type": "bool",
       "defaultValue": true
     },
-    "deployHCI": {
+    "deployDataPlane": {
       "type": "bool",
-      "defaultValue": false
+      "defaultValue": true
     },
     "location": {
       "type": "string",
@@ -132,13 +136,6 @@
         "Standard_E64-32ds_v4"
       ]
     },
-    "serverRdpPort": {
-      "type": "string",
-      "defaultValue": "3389",
-      "metadata": {
-        "description": "If you wish to use a different port to RDP into the VM (between 0 and 65535), change it here, otherwise, leave the default."
-      }
-    },
     "servicePrincipalClientId": {
       "type": "string",
       "metadata": {
@@ -162,8 +159,7 @@
     "commonGroup": "[concat(parameters('prefix'), '-commonresources')]",
     "controlPlaneGroup": "[concat(parameters('prefix'), '-controlplane')]",
     "dataPlaneGroup": "[concat(parameters('prefix'), '-dataplane')]",
-    "dataPlaneGroupOnPrem": "[concat(parameters('prefix'), '-onprem-mock')]",
-    "tempGroupArc": "[concat(parameters('prefix'), '-hci-stuff')]"
+    "dataPlaneGroupOnPrem": "[concat(parameters('prefix'), '-onprem-mock')]"
   },
   "resources": [
     {
@@ -181,13 +177,6 @@
       "properties": {}
     },
     {
-      "type": "Microsoft.Resources/resourceGroups",
-      "apiVersion": "2020-06-01",
-      "location": "[parameters('location')]",
-      "name": "[variables('dataPlaneGroup')]",
-      "properties": {}
-    },
-    {
       "condition": "[parameters('deployMock')]",
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2020-06-01",
@@ -196,34 +185,14 @@
       "properties": {}
     },
     {
-      "condition": "[parameters('deployHCI')]",
+      "condition": "[parameters('deployDataPlane')]",
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2020-06-01",
       "location": "[parameters('location')]",
-      "name": "[variables('tempGroupArc')]",
+      "name": "[variables('dataPlaneGroup')]",
       "properties": {}
     },
-    {
-      "name": "TemplateControlPlaneKeyVault",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-10-01",
-      "resourceGroup": "[variables('controlPlaneGroup')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('controlPlaneGroup'))]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployControlPlaneKeyVault.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "prefix": {
-            "value": "[parameters('prefix')]"
-          }
-        }
-      }
-    },
+
     {
       "name": "TemplateCommon",
       "type": "Microsoft.Resources/deployments",
@@ -239,6 +208,9 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
+          "configureSitetoSite": {
+            "value": "[parameters('configureSitetoSite')]"
+          }
         }
       }
     },
@@ -272,6 +244,9 @@
           },
           "vmSize": {
             "value": "[parameters('serverSize')]"
+          },
+          "configureSitetoSite": {
+            "value": "true"
           }
         }
       }
@@ -331,57 +306,6 @@
     //     }
     //   }
     // },
-    {
-      "name": "TemplateLogAnalytics",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-10-01",
-      "resourceGroup": "[variables('controlPlaneGroup')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('controlPlaneGroup'))]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployControlPlaneLogAnalytics.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "prefix": {
-            "value": "[parameters('prefix')]"
-          }
-        }
-      }
-    },
-    {
-      "name": "TemplateDataPlaneKeyVault",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-10-01",
-      "resourceGroup": "[variables('dataPlaneGroup')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroup'))]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployDataPlaneKeyVault.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "prefix": {
-            "value": "[parameters('prefix')]"
-          },
-          "servicePrincipalClientId": {
-            "value": "[parameters('servicePrincipalClientId')]"
-          },
-          "servicePrincipalClientKey": {
-            "value": "[parameters('servicePrincipalClientKey')]"
-          },
-          "servicePrincipalObjectId": {
-            "value": "[parameters('servicePrincipalObjectId')]"
-          }
-        }
-      }
-    }
     // {
     //   "name": "TemplateDataPlaneArcVNet",
     //   "condition": "[parameters('deployHCI')]",
@@ -559,6 +483,78 @@
     //     }
     //   }
     // }
+    {
+      "name": "TemplateControlPlaneKeyVault",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('controlPlaneGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('controlPlaneGroup'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployControlPlaneKeyVault.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "TemplateLogAnalytics",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('controlPlaneGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('controlPlaneGroup'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployControlPlaneLogAnalytics.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "TemplateDataPlaneKeyVault",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('dataPlaneGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroup'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployDataPlaneKeyVault.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          },
+          "servicePrincipalClientId": {
+            "value": "[parameters('servicePrincipalClientId')]"
+          },
+          "servicePrincipalClientKey": {
+            "value": "[parameters('servicePrincipalClientKey')]"
+          },
+          "servicePrincipalObjectId": {
+            "value": "[parameters('servicePrincipalObjectId')]"
+          }
+        }
+      }
+    }
   ],
   "outputs": {}
 }
