@@ -89,9 +89,7 @@ echo "==========================================================================
 echo -n "Deploying ARM Template..."
 if [ ! -f azuredeploy.json ]
 then
-    curl https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json -O azuredeploy.json
-else
-    echo "File found. Do something meaningful here"
+  wget https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json
 fi
 az deployment sub create --template-file azuredeploy.json  \
   --location $AZURE_LOCATION \
