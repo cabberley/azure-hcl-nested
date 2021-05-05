@@ -2,6 +2,14 @@
 
 Single Region Deployment:  All resources deployed using a single region.
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fdanielscholl%2Fazure-hcl-nested%2Fmaster%2Fazuredeploy.json" target="_blank">
-    <img src="http://azuredeploy.net/deploybutton.png"/>
-</a>
+The Azure Cloud Shell can be run from the Portal, VSCode, Windows Terminal and it is also able to be used as a stand-alone experience by navigating to the https://shell.azure.com address.
+
+Run the following script from azure cloud shell.
+
+> This script requires the logged in user to have an `owner` role on the subscription.
+
+```bash
+REGION="centralus"
+wget -O - https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/run.sh | bash -s -- $REGION
+```
+

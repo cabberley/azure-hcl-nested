@@ -5,7 +5,6 @@
 #    install.sh
 
 
-
 ###############################
 ## ARGUMENT INPUT            ##
 ###############################
@@ -81,35 +80,19 @@ function CreateServicePrincipal() {
     fi
 }
 
-function CreateSSHKeys() {
-  # Required Argument $1 = SSH_USER
-  if [ -d ~/.ssh ]
-  then
-    tput setaf 3;  echo "SSH Keys for User $1: "; tput sgr0
-  else
-    local _BASE_DIR = ${pwd}
-    mkdir ~/.ssh && cd ~/.ssh
-    ssh-keygen -t rsa -b 2048 -C $1 -f id_rsa && cd $_BASE_DIR
-  fi
-
- _result=`cat ~/.ssh/id_rsa.pub`
- #echo $_result
-}
-
-
 
 ###############################
 ## Azure Intialize           ##
 ###############################
 
 tput setaf 2; echo 'Creating Service Principal...' ; tput sgr0
-PrincipalName="$ENVIRONMENT-Principal"
+PrincipalName="http://$ENVIRONMENT-Principal"
 CreateServicePrincipal $PrincipalName
 
 tput setaf 2; echo 'Creating SSH Keys...' ; tput sgr0
 AZURE_USER=$(az account show --query user.name -otsv)
 CLEAN_USER=(${AZURE_USER//@/ })
-# CreateSSHKeys $AZURE_USER
+
 
 tput setaf 2; echo 'Deploying ARM Template...' ; tput sgr0
 if [ -f ./params.json ]; then PARAMS="params.json"; else PARAMS="azuredeploy.parameters.json"; fi

@@ -8,7 +8,8 @@
         "description": "Small unique string."
       },
       "minLength": 2,
-      "maxLength": 5
+      "maxLength": 5,
+      "defaultValue": "demo"
     },
     "deployMock": {
       "type": "bool",
