@@ -9,9 +9,25 @@
 ## ARGUMENT INPUT            ##
 ###############################
 
-usage() { echo "Usage: install.sh " 1>&2; exit 1; }
 
-if [ -f ./.envrc ]; then source ./.envrc; fi
+# Check if the first parameter given is there or not
+if [ -z "$subId" ]; then
+    echo "Script cannot run if the subscription ID is not given"
+    exit 1
+fi
+
+# Check if the first parameter given is there or not
+if [ -z "$RAND" ]; then
+    echo "Script cannot run if the RAND characters are not given"
+    exit 1
+fi
+
+# Check if the first parameter given is there or not
+if [ -z "$ENVIRONMENT" ]; then
+    echo "Script cannot run if the Environment is not given"
+    exit 1
+fi
+
 
 if [ ! -z $1 ]; then ENVIRONMENT=$1; fi
 if [ -z $ENVIRONMENT ]; then
@@ -22,87 +38,60 @@ if [ -z $AZURE_LOCATION ]; then
   AZURE_LOCATION="eastus"
 fi
 
+# Check if az is installed, if not exit the script out.
+var='az'
+if ! which $var &>/dev/null; then
+    echo "This script will not run until Azure CLI is installed and you have been are logged in."
+    exit 1
+fi
+
+az=$(which az)
+
+# Login using the device code method.
+$az login --allow-no-subscriptions --output none
+sleep 5s
+$az account set --subscription $subId
+$az config set core.only-show-errors=true
+
+AZURE_USER=$($az account show --query user.name -otsv)
+CLEAN_USER=(${AZURE_USER//@/ })
 
 ###############################
 ## FUNCTIONS                 ##
 ###############################
 
-function CreateServicePrincipal() {
-    # Required Argument $1 = PRINCIPAL_NAME
-
-    if [ -z $1 ]; then
-        tput setaf 1; echo 'ERROR: Argument $1 (PRINCIPAL_NAME) not received'; tput sgr0
-        exit 1;
-    fi
-
-    local _result=$(az ad sp list --display-name $1 --query [].appId -otsv)
-    if [ "$_result"  == "" ]
-    then
-      CLIENT_SECRET=$(az ad sp create-for-rbac \
-        --name $PrincipalName \
-        --skip-assignment \
-        --query password -otsv)
-      CLIENT_ID=$(az ad sp list \
-        --display-name $PrincipalName \
-        --query [].appId -otsv)
-      OBJECT_ID=$(az ad sp list \
-        --display-name $PrincipalName \
-        --query [].objectId -otsv)
-      UNIQUE=$(shuf -i 100-999 -n 1)
+# Create Environment Service Principal
+principalName="http://edge-$ENVIRONMENT-$RAND-Principal"
+if [ "$($az ad sp list --display-name $principalName --query [].appId -otsv)" = "" ]; then
+  echo "============================================================================================================="
+  echo -n "Creating Service Principal..."
+  clientPassword=$($az ad sp create-for-rbac -n $principalName --role contributor --query password -o tsv)
+  if [ -z "$clientPassword" ]; then
+      echo "Script cannot finish because service principal was not created."
+      $az group update -n $RESOURCEGROUP --tag currentStatus=spCreationFailed 2>/dev/null
+      exit 1
+  fi
+  clientId=$($az ad sp show --id $principalName --query appId -o tsv)
+  clientOid=$($az ad sp show --id $principalName --query objectId -o tsv)
+  echo "Service Principal Created."
+fi
+echo "done."
 
 
-      echo "" >> .envrc
-      echo "export CLIENT_ID=${CLIENT_ID}" >> .envrc
-      echo "export CLIENT_SECRET=${CLIENT_SECRET}" >> .envrc
-      echo "export OBJECT_ID=${OBJECT_ID}" >> .envrc
-      echo "export UNIQUE=${UNIQUE}" >> .envrc
-    else
-        tput setaf 3;  echo "Service Principal $1 already exists."; tput sgr0
-        if [ -z $CLIENT_ID ]; then
-          tput setaf 1; echo 'ERROR: Principal exists but CLIENT_ID not provided' ; tput sgr0
-          exit 1;
-        fi
-
-        if [ -z $CLIENT_SECRET ]; then
-          tput setaf 1; echo 'ERROR: Principal exists but CLIENT_SECRET not provided' ; tput sgr0
-          exit 1;
-        fi
-
-        if [ -z $OBJECT_ID ]; then
-          tput setaf 1; echo 'ERROR: Principal exists but OBJECT_ID not provided' ; tput sgr0
-          exit 1;
-        fi
-
-        if [ -z $UNIQUE ]; then
-          tput setaf 1; echo 'ERROR: UNIQUE not provided' ; tput sgr0
-          exit 1;
-        fi
-    fi
-}
 
 
 ###############################
 ## Azure Intialize           ##
 ###############################
 
-tput setaf 2; echo 'Creating Service Principal...' ; tput sgr0
-PrincipalName="http://$ENVIRONMENT-Principal"
-CreateServicePrincipal $PrincipalName
 
-tput setaf 2; echo 'Creating SSH Keys...' ; tput sgr0
-AZURE_USER=$(az account show --query user.name -otsv)
-CLEAN_USER=(${AZURE_USER//@/ })
-
-
-tput setaf 2; echo 'Deploying ARM Template...' ; tput sgr0
-if [ -f ./params.json ]; then PARAMS="params.json"; else PARAMS="azuredeploy.parameters.json"; fi
-
-az deployment sub create --template-file azuredeploy.json  \
+echo "============================================================================================================="
+echo -n "Deploying ARM Template..."
+az deployment sub create --template-file https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json  \
   --location $AZURE_LOCATION \
-  --parameters $PARAMS \
-  --parameters servicePrincipalClientId=$CLIENT_ID \
-  --parameters servicePrincipalClientKey=$CLIENT_SECRET \
-  --parameters servicePrincipalObjectId=$OBJECT_ID \
+  --parameters servicePrincipalClientId=$clientId \
+  --parameters servicePrincipalClientKey=$clientPassword \
+  --parameters servicePrincipalObjectId=$clientOid \
   --parameters prefix=$ENVIRONMENT \
   --parameters serverUserName=$CLEAN_USER \
   -ojsonc

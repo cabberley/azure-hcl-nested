@@ -12,7 +12,7 @@
 RAND="$(echo $RANDOM | tr '[0-9]' '[a-z]')"
 
 LOCATION="eastus"
-RESOURCEGROUP="hcl-${RAND}"
+RESOURCEGROUP="edge-${RAND}"
 
 # Get commandline for Azure CLI
 az=$(which az)
@@ -33,7 +33,7 @@ echo "==========================================================================
 
 if [ ! "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "containerCreated" ]; then
     echo "Deploying the container (might take 2-3 minutes)..."
-    $az container create -g $RESOURCEGROUP --name deployment --image danielscholl/hcl-nested  --restart-policy Never --environment-variables subId=$subId RAND=$RAND -o none 2>/dev/null
+    $az container create -g $RESOURCEGROUP --name deployment --image danielscholl/hcl-nested  --restart-policy Never --environment-variables subId=$subId ENVIRONMENT=dev RAND=$RAND -o none 2>/dev/null
     $az group update -n $RESOURCEGROUP --tag currentStatus=containerCreated 2>/dev/null
     echo "done."
 fi
