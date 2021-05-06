@@ -125,10 +125,10 @@
     }
   },
   "variables": {
-    "centralGroup": "[concat(parameters('prefix'), '-centralIT')]",
-    "controlPlaneGroup": "[concat(parameters('prefix'), '-controlplane')]",
-    "dataPlaneGroup": "[concat(parameters('prefix'), '-dataplane')]",
-    "dataPlaneGroupOnPrem": "[concat(parameters('prefix'), '-onprem-mock')]"
+    "centralGroup": "[concat('edge-', parameters('prefix'), '-centralIT')]",
+    "controlPlaneGroup": "[concat('edge-', parameters('prefix'), '-controlplane')]",
+    "dataPlaneGroup": "[concat('edge-', parameters('prefix'), '-dataplane')]",
+    "dataPlaneGroupOnPrem": "[concat('edge-', parameters('prefix'), '-onprem-mock')]"
   },
   "resources": [
     {
@@ -279,7 +279,6 @@
         }
       }
     },
-
     {
       "comments": "## Control Plane Resources Deployment Template ##",
       "name": "TemplateControlPlane",
