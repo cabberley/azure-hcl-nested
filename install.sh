@@ -30,13 +30,12 @@ fi
 
 # Check if the first parameter given is there or not
 if [ -z "$environment" ]; then
-    echo "Script cannot run if the Environment is not given"
-    exit 1
+    environment="dev"
 fi
 
 
-if [ -z $AZURE_LOCATION ]; then
-  AZURE_LOCATION="eastus"
+if [ -z $location ]; then
+  location="eastus"
 fi
 
 # Check if az is installed, if not exit the script out.
@@ -54,15 +53,15 @@ sleep 5s
 $az account set --subscription $subId
 $az config set core.only-show-errors=true
 
-AZURE_USER=$($az account show --query user.name -otsv)
-CLEAN_USER=(${AZURE_USER//@/ })
+login_user=$($az account show --query user.name -otsv)
+user=(${login_user//@/ })
 
 ###############################
 ## FUNCTIONS                 ##
 ###############################
 
 # Create Environment Service Principal
-principalName="http://edge-$ENVIRONMENT-$RAND-Principal"
+principalName="http://edge-$environment-$RAND-principal"
 if [ "$($az ad sp list --display-name $principalName --query [].appId -otsv)" = "" ]; then
   echo "============================================================================================================="
   echo -n "Creating Service Principal..."
@@ -89,14 +88,14 @@ echo -n "Deploying ARM Template..."
 if [ ! -f azuredeploy.json ]
 then
   wget https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json
-  ls -l
+  sleep 3
 fi
 az deployment sub create --template-file azuredeploy.json  \
-  --location $AZURE_LOCATION \
+  --location $location \
   --parameters servicePrincipalClientId=$clientId \
   --parameters servicePrincipalClientKey=$clientPassword \
   --parameters servicePrincipalObjectId=$clientOid \
-  --parameters prefix=$ENVIRONMENT \
-  --parameters serverUserName=$CLEAN_USER \
-  --parameters serverPassword=$PASSWORD \
+  --parameters prefix=$environment \
+  --parameters serverUserName=$user \
+  --parameters serverPassword=$password \
   -ojsonc
