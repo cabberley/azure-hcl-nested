@@ -28,12 +28,6 @@ if [ -z "$RAND" ]; then
     exit 1
 fi
 
-# Check if the first parameter given is there or not
-if [ -z "$environment" ]; then
-    environment="dev"
-fi
-
-
 if [ -z $location ]; then
   location="eastus"
 fi
@@ -44,6 +38,8 @@ if ! which $var &>/dev/null; then
     echo "This script will not run until Azure CLI is installed and you have been are logged in."
     exit 1
 fi
+
+RESOURCEGROUP="edge-${RAND}"
 
 az=$(which az)
 
@@ -61,20 +57,20 @@ user=(${login_user//@/ })
 ###############################
 
 # Create Environment Service Principal
-principalName="http://edge-$environment-$RAND-principal"
+principalName="http://edge-$RAND-principal"
 if [ "$($az ad sp list --display-name $principalName --query [].appId -otsv)" = "" ]; then
-  echo "============================================================================================================="
+  echo "================================================================================="
   echo -n "Creating Service Principal..."
   clientPassword=$($az ad sp create-for-rbac -n $principalName --role contributor --query password -o tsv)
   if [ -z "$clientPassword" ]; then
       echo "Script cannot finish because service principal was not created."
-      $az group update -n $RESOURCEGROUP --tag currentStatus=spCreationFailed 2>/dev/null
+      $az group update -n $RESOURCEGROUP --tag currentStatus=spFailed 2>/dev/null
       exit 1
   fi
   clientId=$($az ad sp show --id $principalName --query appId -o tsv)
   clientOid=$($az ad sp show --id $principalName --query objectId -o tsv)
   echo "Service Principal Created."
-  $az group update -n $RESOURCEGROUP --tag currentStatus=spCreationSuccess 2>/dev/null
+  $az group update -n $RESOURCEGROUP --tag currentStatus=spSuccess 2>/dev/null
 fi
 echo "done."
 
@@ -85,23 +81,22 @@ echo "done."
 
 if [ ! -f azuredeploy.json ]
 then
-echo "============================================================================================================="
+echo "================================================================================="
 echo -n "Downloading Edge Solution Template..."
-  wget https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json 2>/dev/null
+  wget https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json > /dev/null 2>&1
   sleep 3
-  $az group update -n $RESOURCEGROUP --tag currentStatus=solutionDownloaded 2>/dev/null
+  $az group update -n $RESOURCEGROUP --tag currentStatus=Download 2>/dev/null
 fi
 
-echo "============================================================================================================="
+echo "================================================================================="
 echo -n "Deploying Edge Solution..."
+$az group update -n $RESOURCEGROUP --tag currentStatus=Deploy 2>/dev/null
 az deployment sub create --template-file azuredeploy.json  \
   --location $location \
   --parameters servicePrincipalClientId=$clientId \
   --parameters servicePrincipalClientKey=$clientPassword \
   --parameters servicePrincipalObjectId=$clientOid \
-  --parameters prefix=$environment \
+  --parameters prefix=$RAND \
   --parameters serverUserName=$user \
   --parameters serverPassword=$password \
   -ojsonc
-
-$az group update -n $RESOURCEGROUP --tag currentStatus=success 2>/dev/null
