@@ -20,6 +20,11 @@ wget -O - https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/s
 
 > The Azure Cloud Shell can be run from the Portal, VSCode, Windows Terminal and it is also able to be used as a stand-alone experience by navigating to the https://shell.azure.com address.
 
+
+## Architecture
+
+This architecture is a demo to play with hybrid concepts of a cloud control plane with an on-prem data plane.
+
 ![[0]][0]
 _Architecture Diagram_
 
