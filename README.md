@@ -10,6 +10,7 @@ Run the following script from azure cloud shell.
 
 ```bash
 REGION="centralus"
-wget -O - https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/run.sh | bash -s -- $REGION
+PASSWORD="<admin_password>"
+wget -O - https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/run.sh | bash -s -- $PASSWORD
 ```
 

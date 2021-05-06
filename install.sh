@@ -17,22 +17,23 @@ if [ -z "$subId" ]; then
 fi
 
 # Check if the first parameter given is there or not
+if [ -z "$password" ]; then
+    echo "Script cannot run if the admin password is not given"
+    exit 1
+fi
+
+# Check if the first parameter given is there or not
 if [ -z "$RAND" ]; then
     echo "Script cannot run if the RAND characters are not given"
     exit 1
 fi
 
 # Check if the first parameter given is there or not
-if [ -z "$ENVIRONMENT" ]; then
+if [ -z "$environment" ]; then
     echo "Script cannot run if the Environment is not given"
     exit 1
 fi
 
-
-if [ ! -z $1 ]; then ENVIRONMENT=$1; fi
-if [ -z $ENVIRONMENT ]; then
-  ENVIRONMENT="dev"
-fi
 
 if [ -z $AZURE_LOCATION ]; then
   AZURE_LOCATION="eastus"
@@ -78,8 +79,6 @@ fi
 echo "done."
 
 
-
-
 ###############################
 ## Azure Intialize           ##
 ###############################
@@ -90,6 +89,7 @@ echo -n "Deploying ARM Template..."
 if [ ! -f azuredeploy.json ]
 then
   wget https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json
+  ls -l
 fi
 az deployment sub create --template-file azuredeploy.json  \
   --location $AZURE_LOCATION \
@@ -98,4 +98,5 @@ az deployment sub create --template-file azuredeploy.json  \
   --parameters servicePrincipalObjectId=$clientOid \
   --parameters prefix=$ENVIRONMENT \
   --parameters serverUserName=$CLEAN_USER \
+  --parameters serverPassword=$PASSWORD \
   -ojsonc
