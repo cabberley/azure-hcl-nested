@@ -74,6 +74,7 @@ if [ "$($az ad sp list --display-name $principalName --query [].appId -otsv)" = 
   clientId=$($az ad sp show --id $principalName --query appId -o tsv)
   clientOid=$($az ad sp show --id $principalName --query objectId -o tsv)
   echo "Service Principal Created."
+  $az group update -n $RESOURCEGROUP --tag currentStatus=spCreationSuccess 2>/dev/null
 fi
 echo "done."
 
@@ -82,14 +83,17 @@ echo "done."
 ## Azure Intialize           ##
 ###############################
 
-
-echo "============================================================================================================="
-echo -n "Deploying ARM Template..."
 if [ ! -f azuredeploy.json ]
 then
-  wget https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json
+echo "============================================================================================================="
+echo -n "Downloading Edge Solution Template..."
+  wget https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json 2>/dev/null
   sleep 3
+  $az group update -n $RESOURCEGROUP --tag currentStatus=solutionDownloaded 2>/dev/null
 fi
+
+echo "============================================================================================================="
+echo -n "Deploying Edge Solution..."
 az deployment sub create --template-file azuredeploy.json  \
   --location $location \
   --parameters servicePrincipalClientId=$clientId \
@@ -99,3 +103,5 @@ az deployment sub create --template-file azuredeploy.json  \
   --parameters serverUserName=$user \
   --parameters serverPassword=$password \
   -ojsonc
+
+$az group update -n $RESOURCEGROUP --tag currentStatus=success 2>/dev/null
