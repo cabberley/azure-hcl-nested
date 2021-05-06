@@ -83,14 +83,16 @@ if [ ! -f azuredeploy.json ]
 then
 echo "================================================================================="
 echo -n "Downloading Edge Solution Template..."
+echo ""
   wget https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json > /dev/null 2>&1
   sleep 3
-  $az group update -n $RESOURCEGROUP --tag currentStatus=Download 2>/dev/null
+  $az group update -n $RESOURCEGROUP --tag currentStatus=Download > /dev/null 2>&1
 fi
 
 echo "================================================================================="
 echo -n "Deploying Edge Solution..."
-$az group update -n $RESOURCEGROUP --tag currentStatus=Deploy 2>/dev/null
+echo ""
+$az group update -n $RESOURCEGROUP --tag currentStatus=Deploy > /dev/null 2>&1
 az deployment sub create --template-file azuredeploy.json  \
   --location $location \
   --parameters servicePrincipalClientId=$clientId \
