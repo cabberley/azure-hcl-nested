@@ -128,7 +128,8 @@
     "centralGroup": "[concat('edge-', parameters('prefix'), '-centralIT')]",
     "controlPlaneGroup": "[concat('edge-', parameters('prefix'), '-controlplane')]",
     "dataPlaneGroup": "[concat('edge-', parameters('prefix'), '-dataplane')]",
-    "dataPlaneGroupOnPrem": "[concat('edge-', parameters('prefix'), '-onprem-mock')]"
+    "dataPlaneGroupOnPrem": "[concat('edge-', parameters('prefix'), '-onprem-mock')]",
+    "localNetworkGatewayName": "local-gateway-azure-network"
   },
   "resources": [
     {
@@ -138,6 +139,33 @@
       "location": "[parameters('location')]",
       "name": "[variables('centralGroup')]",
       "properties": {}
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "applyLock",
+      "resourceGroup": "[variables('centralGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('centralGroup'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/locks",
+              "apiVersion": "2017-04-01",
+              "name": "DontDelete",
+              "properties": {
+                "level": "CanNotDelete",
+                "notes": "Prevent deletion of the resourceGroup"
+              }
+            }
+          ]
+        }
+      }
     },
     {
       "comments": "## Control Plane Resource Group (Required) ##",
@@ -155,6 +183,33 @@
       "location": "[parameters('location')]",
       "name": "[variables('dataPlaneGroupOnPrem')]",
       "properties": {}
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "[concat('lock-', variables('dataPlaneGroupOnPrem'))]",
+      "resourceGroup": "[variables('dataPlaneGroupOnPrem')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroupOnPrem'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/locks",
+              "apiVersion": "2017-04-01",
+              "name": "DontDelete",
+              "properties": {
+                "level": "CanNotDelete",
+                "notes": "Prevent deletion of the resourceGroup"
+              }
+            }
+          ]
+        }
+      }
     },
     {
       "comments": "## Data Plane Resource Group (Optional) ##",
@@ -284,13 +339,42 @@
         },
         "parameters": {
           "azureCloudVnetPrefix": {
-            "value": "[reference('TemplateMockOnPrem').outputs.mocOnpremNetworkPrefix.value]"
+            "value": "[reference('TemplateMockOnPrem', '2020-06-01').outputs.mocOnpremNetworkPrefix.value]"
           },
           "gatewayIpAddress": {
-            "value": "[reference('TemplateMockOnPrem').outputs.vpnIp.value]"
+            "value": "[reference('TemplateMockOnPrem', '2020-06-01').outputs.vpnIp.value]"
           },
           "azureNetworkGatewayName": {
-            "value": "[reference('TemplateCentralIT').outputs.azureGatewayName.value]"
+            "value": "[reference('TemplateCentralIT', '2020-06-01').outputs.azureGatewayName.value]"
+          }
+        }
+      }
+    },
+    {
+      "comments": "## Central-IT VPN Gateway Connect Template ##",
+      "name": "TemplateCentralITLocalGateway",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-06-01",
+      "resourceGroup": "[variables('centralGroup')]",
+      "dependsOn": [
+        "TemplateCentralIT",
+        "TemplateMockOnPrem"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployCentralResourcesLocalGateway.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "azureCloudVnetPrefix": {
+            "value": "[reference('TemplateMockOnPrem', '2020-06-01').outputs.mocOnpremNetworkPrefix.value]"
+          },
+          "gatewayIpAddress": {
+            "value": "[reference('TemplateMockOnPrem', '2020-06-01').outputs.vpnIp.value]"
+          },
+          "azureNetworkGatewayName": {
+            "value": "[reference('TemplateCentralIT', '2020-06-01').outputs.azureGatewayName.value]"
           }
         }
       }
@@ -313,16 +397,16 @@
         },
         "parameters": {
           "gatewayIpAddress": {
-            "value": "[reference('TemplateCentralIT').outputs.vpnIp.value]"
+            "value": "[reference('TemplateCentralIT', '2020-06-01').outputs.vpnIp.value]"
           },
           "azureCloudVnetPrefix": {
-            "value": "[reference('TemplateCentralIT').outputs.mocOnpremNetwork.value]"
+            "value": "[reference('TemplateCentralIT', '2020-06-01').outputs.mocOnpremNetwork.value]"
           },
           "spokeNetworkAddressPrefix": {
-            "value": "[reference('TemplateCentralIT').outputs.spokeNetworkAddressPrefix.value]"
+            "value": "[reference('TemplateCentralIT', '2020-06-01').outputs.spokeNetworkAddressPrefix.value]"
           },
           "mocOnpremGatewayName": {
-            "value": "[reference('TemplateMockOnPrem').outputs.mocOnpremGatewayName.value]"
+            "value": "[reference('TemplateMockOnPrem', '2020-06-01').outputs.mocOnpremGatewayName.value]"
           }
         }
       }

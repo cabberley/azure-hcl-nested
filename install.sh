@@ -93,7 +93,7 @@ echo "==========================================================================
 echo -n "Deploying Edge Solution..."
 echo ""
 $az group update -n $RESOURCEGROUP --tag currentStatus=Deploy > /dev/null 2>&1
-az deployment sub create --template-file azuredeploy.json  --no-wait \
+$az deployment sub create --template-file azuredeploy.json  --no-wait \
   --location $location \
   --parameters servicePrincipalClientId=$clientId \
   --parameters servicePrincipalClientKey=$clientPassword \
