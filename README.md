@@ -9,8 +9,19 @@ Run the following script from azure cloud shell.
 > This script requires the logged in user to have an `owner` role on the subscription.
 
 ```bash
-REGION="centralus"
 PASSWORD="<admin_password>"
 wget -O - https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/run.sh | bash -s -- $PASSWORD
 ```
 
+__Manually Deploy a Template__
+
+```bash
+# Create a Service Principal
+az ad sp create-for-rbac -n http://edge-principal --role contributor
+
+# Deploy Template
+az deployment sub create --template-file azuredeploy.json  --no-wait \
+  --location eastus \
+  --parameters azuredeploy.parameters.json \
+  -ojsonc
+```

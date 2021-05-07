@@ -134,7 +134,7 @@
     {
       "comments": "## Central Resource Group (Required) ##",
       "type": "Microsoft.Resources/resourceGroups",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2021-04-01",
       "location": "[parameters('location')]",
       "name": "[variables('centralGroup')]",
       "properties": {}
@@ -142,7 +142,7 @@
     {
       "comments": "## Control Plane Resource Group (Required) ##",
       "type": "Microsoft.Resources/resourceGroups",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2021-04-01",
       "location": "[parameters('location')]",
       "name": "[variables('controlPlaneGroup')]",
       "properties": {}
@@ -151,7 +151,7 @@
       "comments": "## On-Prem Resource Group (Optional) ##",
       "condition": "[parameters('deployMock')]",
       "type": "Microsoft.Resources/resourceGroups",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2021-04-01",
       "location": "[parameters('location')]",
       "name": "[variables('dataPlaneGroupOnPrem')]",
       "properties": {}
@@ -160,7 +160,7 @@
       "comments": "## Data Plane Resource Group (Optional) ##",
       "condition": "[parameters('deployDataPlane')]",
       "type": "Microsoft.Resources/resourceGroups",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2021-04-01",
       "location": "[parameters('location')]",
       "name": "[variables('dataPlaneGroup')]",
       "properties": {}
@@ -214,6 +214,54 @@
           },
           "vmSize": {
             "value": "[parameters('serverSize')]"
+          }
+        }
+      }
+    },
+    {
+      "comments": "## Control Plane Resources Deployment Template ##",
+      "name": "TemplateControlPlane",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('controlPlaneGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('controlPlaneGroup'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployControlPlane.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          }
+        }
+      }
+    },
+    {
+      "comments": "## Data Plane Resources Deployment Template ##",
+      "name": "TemplateDataPlane",
+      "condition": "[parameters('deployDataPlane')]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('dataPlaneGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroup'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployDataPlane.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          },
+          "subnet": {
+            "value": "[reference('TemplateCentralIT').outputs.dataPlaneNetwork.value.subnetId]"
           }
         }
       }
@@ -275,54 +323,6 @@
           },
           "mocOnpremGatewayName": {
             "value": "[reference('TemplateMockOnPrem').outputs.mocOnpremGatewayName.value]"
-          }
-        }
-      }
-    },
-    {
-      "comments": "## Control Plane Resources Deployment Template ##",
-      "name": "TemplateControlPlane",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-10-01",
-      "resourceGroup": "[variables('controlPlaneGroup')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('controlPlaneGroup'))]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployControlPlane.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "prefix": {
-            "value": "[parameters('prefix')]"
-          }
-        }
-      }
-    },
-    {
-      "comments": "## Data Plane Resources Deployment Template ##",
-      "name": "TemplateDataPlane",
-      "condition": "[parameters('deployDataPlane')]",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-10-01",
-      "resourceGroup": "[variables('dataPlaneGroup')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroup'))]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployDataPlane.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "prefix": {
-            "value": "[parameters('prefix')]"
-          },
-          "subnet": {
-            "value": "[reference('TemplateCentralIT').outputs.dataPlaneNetwork.value.subnetId]"
           }
         }
       }
