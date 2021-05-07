@@ -56,6 +56,9 @@ user=(${login_user//@/ })
 ## FUNCTIONS                 ##
 ###############################
 
+# Retrieve User Managed Id
+identityId=$($az identity list --query "[?name=='edge-$RAND-identity'].id" -otsv)
+
 # Create Environment Service Principal
 principalName="http://edge-$RAND-principal"
 if [ "$($az ad sp list --display-name $principalName --query [].appId -otsv)" = "" ]; then
@@ -99,6 +102,7 @@ $az deployment sub create --template-file azuredeploy.json  --no-wait \
   --parameters servicePrincipalClientKey=$clientPassword \
   --parameters servicePrincipalObjectId=$clientOid \
   --parameters prefix=$RAND \
+  --parameters identityId=$identityId \
   --parameters serverUserName=$user \
   --parameters serverPassword=$password \
   -ojsonc

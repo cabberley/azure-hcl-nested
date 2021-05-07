@@ -11,6 +11,19 @@
       "maxLength": 5,
       "defaultValue": "demo"
     },
+    "identityId": {
+      "type": "string",
+      "metadata": {
+        "description": "Application Client Id."
+      }
+    },
+    "newGuid": {
+      "type": "string",
+      "defaultValue": "[newGuid()]",
+      "metadata": {
+        "description": "forceUpdateTag property, used to force the execution of the script resource when no other properties have changed."
+      }
+    },
     "deployMock": {
       "type": "bool",
       "defaultValue": true
@@ -133,7 +146,35 @@
   },
   "resources": [
     {
-      "comments": "## Central Resource Group (Required) ##",
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2020-10-01",
+      "kind": "AzureCLI",
+      "name": "testscript",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[parameters('identityId')]": {}
+        }
+      },
+      "properties": {
+        "forceUpdateTag": "[parameters('newGuid')]",
+        "containerSettings": {
+          "containerGroupName": "deploymentScripts"
+        },
+        "AzCliVersion": "2.0.80",
+        "environmentVariables": [
+
+        ],
+        "scriptContent": "echo 'Hello Wolrd'",
+        "supportingScriptUris": [],
+        "timeout": "PT30M",
+        "retentionInterval": "P1D",
+        "cleanupPreference": "OnSuccess"
+      }
+    },
+    {
+      "comments": "## Central IT Resource Group (Required) ##",
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2021-04-01",
       "location": "[parameters('location')]",
@@ -141,14 +182,18 @@
       "properties": {}
     },
     {
+      "comments": "## Lock Central IT Resource Group (Required) ##",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
-      "name": "applyLock",
+      "name": "[concat('lock-', variables('centralGroup'))]",
       "resourceGroup": "[variables('centralGroup')]",
       "dependsOn": [
         "[resourceId('Microsoft.Resources/resourceGroups/', variables('centralGroup'))]"
       ],
       "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "outer"
+        },
         "mode": "Incremental",
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
