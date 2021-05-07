@@ -40,17 +40,15 @@
         "level": "CanNotDelete",
         "notes": "Prevent deletion of the resourceGroup"
       }
-    },
-    {
-      "comments": "## Resource Group Role Assignment ##",
-      "name": "[guid(parameters('roleAssignmentName'))]",
-      "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "2020-04-01-preview",
-      "properties": {
-        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', parameters('roleDefinitionId'))]",
-        "principalId": "[parameters('principalId')]",
-        "scope": "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('rgName'))]"
-      }
     }
-  ]
-}
+    // {
+    //   "comments": "## Resource Group Role Assignment ##",
+    //   "name": "[guid(parameters('roleAssignmentName'))]",
+    //   "type": "Microsoft.Authorization/roleAssignments",
+    //   "apiVersion": "2020-04-01-preview",
+    //   "properties": {
+    //     "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', parameters('roleDefinitionId'))]",
+    //     "principalId": "[parameters('principalId')]",
+    //     "scope": "[subscriptionResourceId('Microsoft.Resources/resourceGroups', parameters('rgName'))]"
+    //   }
+} ] }
