@@ -64,7 +64,7 @@ if [ "$($az ad sp list --display-name $principalName --query [].appId -otsv)" = 
   clientPassword=$($az ad sp create-for-rbac -n $principalName --role contributor --query password -o tsv)
   if [ -z "$clientPassword" ]; then
       echo "Script cannot finish because service principal was not created."
-      $az group update -n $RESOURCEGROUP --tag currentStatus=spFailed 2>/dev/null
+      $az group update -n $RESOURCEGROUP --tag currentStatus=spFailed > /dev/null 2>&1
       exit 1
   fi
   clientId=$($az ad sp show --id $principalName --query appId -o tsv)
@@ -93,7 +93,7 @@ echo "==========================================================================
 echo -n "Deploying Edge Solution..."
 echo ""
 $az group update -n $RESOURCEGROUP --tag currentStatus=Deploy > /dev/null 2>&1
-az deployment sub create --template-file azuredeploy.json  \
+az deployment sub create --template-file azuredeploy.json  --no-wait \
   --location $location \
   --parameters servicePrincipalClientId=$clientId \
   --parameters servicePrincipalClientKey=$clientPassword \
