@@ -351,35 +351,6 @@
       }
     },
     {
-      "comments": "## Central-IT VPN Gateway Connect Template ##",
-      "name": "TemplateCentralITLocalGateway",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-06-01",
-      "resourceGroup": "[variables('centralGroup')]",
-      "dependsOn": [
-        "TemplateCentralIT",
-        "TemplateMockOnPrem"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployCentralResourcesLocalGateway.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "azureCloudVnetPrefix": {
-            "value": "[reference('TemplateMockOnPrem', '2020-06-01').outputs.mocOnpremNetworkPrefix.value]"
-          },
-          "gatewayIpAddress": {
-            "value": "[reference('TemplateMockOnPrem', '2020-06-01').outputs.vpnIp.value]"
-          },
-          "azureNetworkGatewayName": {
-            "value": "[reference('TemplateCentralIT', '2020-06-01').outputs.azureGatewayName.value]"
-          }
-        }
-      }
-    },
-    {
       "comments": "## On-Prem VPN Gateway Connect Template ##",
       "name": "TemplateMockOnPremLocalGateway",
       "type": "Microsoft.Resources/deployments",

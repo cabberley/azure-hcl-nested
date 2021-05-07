@@ -26,8 +26,8 @@ echo "==========================================================================
 if [ ! "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "groupCreated" ]; then
     # Deploy the resource group and update Status Tag
     echo "Deploying the resource group."
-    $az group create -g "$RESOURCEGROUP" -l "$LOCATION" -o none 2>/dev/null
-    $az group update -n $RESOURCEGROUP --tag currentStatus=groupCreated 2>/dev/null
+    $az group create -g "$RESOURCEGROUP" -l "$LOCATION" -o none > /dev/null 2>&1
+    $az group update -n $RESOURCEGROUP --tag currentStatus=groupCreated > /dev/null 2>&1
     echo "done."
 fi
 
@@ -36,7 +36,7 @@ echo "==========================================================================
 if [ ! "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "containerCreated" ]; then
     echo "Deploying the container (might take 2-3 minutes)..."
     $az container create -g $RESOURCEGROUP --name deployment --image danielscholl/hcl-nested  --restart-policy Never --environment-variables subId=$subId password=$password RAND=$RAND -o none 2>/dev/null
-    $az group update -n $RESOURCEGROUP --tag currentStatus=containerCreated 2>/dev/null
+    $az group update -n $RESOURCEGROUP --tag currentStatus=containerCreated > /dev/null 2>&1
     echo "done."
 fi
 
@@ -46,6 +46,7 @@ echo "If cloudshell times out copy this command and run it again when cloud shel
 echo "     az container logs --follow -n deployment -g $RESOURCEGROUP"
 echo "==============================================================================================================================================================="
 echo "==============================================================================================================================================================="
+sleep 10
 
 if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "containerCreated" ]; then
     echo "Tail Logs"

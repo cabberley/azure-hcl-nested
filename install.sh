@@ -70,7 +70,7 @@ if [ "$($az ad sp list --display-name $principalName --query [].appId -otsv)" = 
   clientId=$($az ad sp show --id $principalName --query appId -o tsv)
   clientOid=$($az ad sp show --id $principalName --query objectId -o tsv)
   echo "Service Principal Created."
-  $az group update -n $RESOURCEGROUP --tag currentStatus=spSuccess 2>/dev/null
+  $az group update -n $RESOURCEGROUP --tag currentStatus=spSuccess > /dev/null 2>&1
 fi
 echo "done."
 
