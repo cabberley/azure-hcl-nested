@@ -132,7 +132,7 @@
       "type": "Microsoft.Resources/deploymentScripts",
       "apiVersion": "2020-10-01",
       "kind": "AzureCLI",
-      "name": "testscript",
+      "name": "createGroups",
       "location": "[parameters('location')]",
       "identity": {
         "type": "UserAssigned",
@@ -147,26 +147,24 @@
         },
         "AzCliVersion": "2.0.80",
         "environmentVariables": [
-
+          {
+            "name": "centralGroup",
+            "value": "[variables('centralGroup')]"
+          },
+          {
+            "name": "location",
+            "value": "[parameters('location')]"
+          }
         ],
         "arguments": "[variables('cliArg')]",
         "scriptContent": "
-          spInfo=$($az ad sp create-for-rbac -n $principalName --role contributor -o tsv)
-          echo $spInfo > $AZ_SCRIPTS_OUTPUT_PATH
+          az group create -g $centralGroup -l $location
         ",
         "supportingScriptUris": [],
         "timeout": "PT30M",
         "retentionInterval": "P1D",
         "cleanupPreference": "OnSuccess"
       }
-    },
-    {
-      "comments": "## Central IT Resource Group (Required) ##",
-      "type": "Microsoft.Resources/resourceGroups",
-      "apiVersion": "2021-04-01",
-      "location": "[parameters('location')]",
-      "name": "[variables('centralGroup')]",
-      "properties": {}
     },
     {
       "comments": "## Lock Central IT Resource Group (Required) ##",
@@ -199,6 +197,40 @@
         }
       }
     },
+    {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2020-10-01",
+      "kind": "AzureCLI",
+      "name": "testscript",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userIdentityName'))]": {}
+        }
+      },
+      "properties": {
+        "forceUpdateTag": "[parameters('newGuid')]",
+        "containerSettings": {
+          "containerGroupName": "deploymentScripts"
+        },
+        "AzCliVersion": "2.0.80",
+        "environmentVariables": [
+
+        ],
+        "arguments": "[variables('cliArg')]",
+        "scriptContent": "
+          spInfo=$(az ad sp create-for-rbac -n $principalName --role contributor -o tsv)
+          echo $spInfo > $AZ_SCRIPTS_OUTPUT_PATH
+        ",
+        "supportingScriptUris": [],
+        "timeout": "PT30M",
+        "retentionInterval": "P1D",
+        "cleanupPreference": "OnSuccess"
+      }
+    },
+
+
     {
       "comments": "## Control Plane Resource Group (Required) ##",
       "type": "Microsoft.Resources/resourceGroups",
