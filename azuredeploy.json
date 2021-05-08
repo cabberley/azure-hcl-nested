@@ -2,448 +2,118 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "prefix": {
-      "type": "string",
-      "metadata": {
-        "description": "Small unique string."
-      },
-      "minLength": 2,
-      "maxLength": 5,
-      "defaultValue": "demo"
-    },
-    "newGuid": {
-      "type": "string",
-      "defaultValue": "[newGuid()]",
-      "metadata": {
-        "description": "forceUpdateTag property, used to force the execution of the script resource when no other properties have changed."
-      }
-    },
-    "deployMock": {
-      "type": "bool",
-      "defaultValue": true
-    },
-    "deployDataPlane": {
-      "type": "bool",
-      "defaultValue": true
-    },
-    "location": {
-      "type": "string",
-      "metadata": {
-        "description": "Small unique string."
-      },
-      "defaultValue": "eastus"
-    },
-    "templateURL": {
-      "type": "string",
-      "metadata": {
-        "description": "URL Location on where to find the templates"
-      },
-      "defaultValue": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/master/templates/"
-    },
-    "userIdentityName": {
-      "type": "string",
-      "metadata": {
-        "description": "User Managed Identity Name"
-      }
-    },
-    "serverUserName": {
-      "type": "string",
-      "metadata": {
-        "description": "Windows SA Account UserName"
-      },
-      "minLength": 5
-    },
-    "serverPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Windows SA Account Password"
-      },
-      "minLength": 10
-    },
-    "serverSize": {
-      "type": "string",
-      "metadata": {
-        "description": "The virtual machine server size."
-      },
-      "defaultValue": "Standard_D16s_v3",
-      "allowedValues": [
-        "Standard_D16s_v3",
-        "Standard_D32s_v3",
-        "Standard_D64s_v3",
-        "Standard_D16s_v4",
-        "Standard_D32s_v4",
-        "Standard_D64s_v4",
-        "Standard_D16d_v4",
-        "Standard_D32d_v4",
-        "Standard_D64d_v4",
-        "Standard_D16ds_v4",
-        "Standard_D32ds_v4",
-        "Standard_D64ds_v4",
-        "Standard_E8s_v3",
-        "Standard_E16s_v3",
-        "Standard_E16-4s_v3",
-        "Standard_E16-8s_v3",
-        "Standard_E20s_v3",
-        "Standard_E32s_v3",
-        "Standard_E32-8s_v3",
-        "Standard_E32-16s_v3",
-        "Standard_E48s_v3",
-        "Standard_E64s_v3",
-        "Standard_E64-16s_v3",
-        "Standard_E64-32s_v3",
-        "Standard_E8s_v4",
-        "Standard_E16s_v4",
-        "Standard_E16-8s_v4",
-        "Standard_E20s_v4",
-        "Standard_E32s_v4",
-        "Standard_E32-8s_v4",
-        "Standard_E32-16s_v4",
-        "Standard_E48s_v4",
-        "Standard_E64s_v4",
-        "Standard_E64-16s_v4",
-        "Standard_E64-32s_v4",
-        "Standard_E8d_v4",
-        "Standard_E16d_v4",
-        "Standard_E20d_v4",
-        "Standard_E32d_v4",
-        "Standard_E48d_v4",
-        "Standard_E64d_v4",
-        "Standard_E8ds_v4",
-        "Standard_E16ds_v4",
-        "Standard_E20ds_v4",
-        "Standard_E32ds_v4",
-        "Standard_E48ds_v4",
-        "Standard_E64ds_v4",
-        "Standard_E64-16ds_v4",
-        "Standard_E64-32ds_v4"
-      ]
-    }
   },
   "variables": {
-    "centralGroup": "[concat('edge-', parameters('prefix'), '-centralIT')]",
-    "controlPlaneGroup": "[concat('edge-', parameters('prefix'), '-controlplane')]",
-    "dataPlaneGroup": "[concat('edge-', parameters('prefix'), '-dataplane')]",
-    "dataPlaneGroupOnPrem": "[concat('edge-', parameters('prefix'), '-onprem-mock')]",
-    "localNetworkGatewayName": "local-gateway-azure-network",
-    "cliArg": "[concat('edge-', parameters('prefix'), '-principal')]"
+    "storageAccountName": "[concat('storage', uniqueString(resourceGroup().id))]",
+    "storageBlobContainerName": "config",
+    "userIdentityName": "configDeployer",
+    "roleAssignmentName": "[guid(concat(resourceGroup().id, 'contributor'))]",
+    "deploymentScriptName": "CopyConfigScript"
   },
   "resources": [
     {
+      "comments": "## Storage Account ##",
+      "name": "[variables('storageAccountName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2019-06-01",
+      "tags": {
+        "displayName": "[variables('storageAccountName')]"
+      },
+      "location": "[resourceGroup().location]",
+      "kind": "StorageV2",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "properties": {
+        "encryption": {
+          "services": {
+            "blob": {
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        },
+        "supportsHttpsTrafficOnly": true
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices",
+      "apiVersion": "2019-04-01",
+      "name": "[concat(variables('storageAccountName'), '/default')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2019-04-01",
+      "name": "[concat(variables('storageAccountName'),'/default/',variables('storageBlobContainerName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('storageAccountName'), 'default')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ],
+      "properties": {
+        "publicAccess": "Blob"
+      }
+    },
+    {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2018-11-30",
+      "name": "[variables('userIdentityName')]",
+      "location": "[resourceGroup().location]"
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2018-09-01-preview",
+      "name": "[variables('roleAssignmentName')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentityName'))]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentityName')), '2015-08-31-preview').principalId]",
+        "scope": "[subscription()]",
+        "principalType": "ServicePrincipal"
+      }
+    },
+    {
       "type": "Microsoft.Resources/deploymentScripts",
       "apiVersion": "2020-10-01",
       "kind": "AzureCLI",
-      "name": "createGroups",
-      "location": "[parameters('location')]",
+      "name": "[variables('deploymentScriptName')]",
+      "location": "[resourceGroup().location]",
       "identity": {
         "type": "UserAssigned",
         "userAssignedIdentities": {
-          "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userIdentityName'))]": {}
+          "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('userIdentityName'))]": {}
         }
       },
       "properties": {
-        "forceUpdateTag": "[parameters('newGuid')]",
+        "forceUpdateTag": "[newGuid()]",
         "containerSettings": {
           "containerGroupName": "deploymentScripts"
         },
         "AzCliVersion": "2.0.80",
         "environmentVariables": [
           {
-            "name": "centralGroup",
-            "value": "[variables('centralGroup')]"
+            "name": "ResourceGroupName",
+            "value": "[resourceGroup().name]"
           },
           {
-            "name": "location",
-            "value": "[parameters('location')]"
+            "name": "Location",
+            "value": "[resourceGroup().location]"
           }
         ],
-        "arguments": "[variables('cliArg')]",
         "scriptContent": "
-          az group create -g $centralGroup -l $location
+          wget https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/edgesolution.json -O templateSpec.json
+          sleep 3
+          az ts create --name \"edgeSolution\"  --resource-group $ResourceGroupName --location $Location --version \"1.0\" --template-file \"./templateSpec.json\"
         ",
         "supportingScriptUris": [],
         "timeout": "PT30M",
         "retentionInterval": "P1D",
         "cleanupPreference": "OnSuccess"
-      }
-    },
-    {
-      "comments": "## Lock Central IT Resource Group (Required) ##",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2019-10-01",
-      "name": "[concat('lock-', variables('centralGroup'))]",
-      "resourceGroup": "[variables('centralGroup')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('centralGroup'))]"
-      ],
-      "properties": {
-        "expressionEvaluationOptions": {
-          "scope": "outer"
-        },
-        "mode": "Incremental",
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "resources": [
-            {
-              "type": "Microsoft.Authorization/locks",
-              "apiVersion": "2017-04-01",
-              "name": "DontDelete",
-              "properties": {
-                "level": "CanNotDelete",
-                "notes": "Prevent deletion of the resourceGroup"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Resources/deploymentScripts",
-      "apiVersion": "2020-10-01",
-      "kind": "AzureCLI",
-      "name": "testscript",
-      "location": "[parameters('location')]",
-      "identity": {
-        "type": "UserAssigned",
-        "userAssignedIdentities": {
-          "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userIdentityName'))]": {}
-        }
-      },
-      "properties": {
-        "forceUpdateTag": "[parameters('newGuid')]",
-        "containerSettings": {
-          "containerGroupName": "deploymentScripts"
-        },
-        "AzCliVersion": "2.0.80",
-        "environmentVariables": [
-
-        ],
-        "arguments": "[variables('cliArg')]",
-        "scriptContent": "
-          spInfo=$(az ad sp create-for-rbac -n $principalName --role contributor -o tsv)
-          echo $spInfo > $AZ_SCRIPTS_OUTPUT_PATH
-        ",
-        "supportingScriptUris": [],
-        "timeout": "PT30M",
-        "retentionInterval": "P1D",
-        "cleanupPreference": "OnSuccess"
-      }
-    },
-
-
-    {
-      "comments": "## Control Plane Resource Group (Required) ##",
-      "type": "Microsoft.Resources/resourceGroups",
-      "apiVersion": "2021-04-01",
-      "location": "[parameters('location')]",
-      "name": "[variables('controlPlaneGroup')]",
-      "properties": {}
-    },
-    {
-      "comments": "## On-Prem Resource Group (Optional) ##",
-      "condition": "[parameters('deployMock')]",
-      "type": "Microsoft.Resources/resourceGroups",
-      "apiVersion": "2021-04-01",
-      "location": "[parameters('location')]",
-      "name": "[variables('dataPlaneGroupOnPrem')]",
-      "properties": {}
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2019-10-01",
-      "name": "[concat('lock-', variables('dataPlaneGroupOnPrem'))]",
-      "resourceGroup": "[variables('dataPlaneGroupOnPrem')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroupOnPrem'))]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "resources": [
-            {
-              "type": "Microsoft.Authorization/locks",
-              "apiVersion": "2017-04-01",
-              "name": "DontDelete",
-              "properties": {
-                "level": "CanNotDelete",
-                "notes": "Prevent deletion of the resourceGroup"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "comments": "## Data Plane Resource Group (Optional) ##",
-      "condition": "[parameters('deployDataPlane')]",
-      "type": "Microsoft.Resources/resourceGroups",
-      "apiVersion": "2021-04-01",
-      "location": "[parameters('location')]",
-      "name": "[variables('dataPlaneGroup')]",
-      "properties": {}
-    },
-    {
-      "comments": "## Central Resources Deployment Template ##",
-      "name": "TemplateCentralIT",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-10-01",
-      "resourceGroup": "[variables('centralGroup')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('centralGroup'))]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployCentralResources.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {}
-      }
-    },
-    {
-      "comments": "## On-Prem Resources Deployment Template ##",
-      "name": "TemplateMockOnPrem",
-      "condition": "[parameters('deployMock')]",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-06-01",
-      "resourceGroup": "[variables('dataPlaneGroupOnPrem')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroupOnPrem'))]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployMockOnPrem.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "prefix": {
-            "value": "[parameters('prefix')]"
-          },
-          "adminUsername": {
-            "value": "[parameters('serverUserName')]"
-          },
-          "adminPassword": {
-            "value": "[parameters('serverPassword')]"
-          },
-          "vmName": {
-            "value": "hci"
-          },
-          "vmSize": {
-            "value": "[parameters('serverSize')]"
-          }
-        }
-      }
-    },
-    {
-      "comments": "## Control Plane Resources Deployment Template ##",
-      "name": "TemplateControlPlane",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-10-01",
-      "resourceGroup": "[variables('controlPlaneGroup')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('controlPlaneGroup'))]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployControlPlane.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "prefix": {
-            "value": "[parameters('prefix')]"
-          }
-        }
-      }
-    },
-    {
-      "comments": "## Data Plane Resources Deployment Template ##",
-      "name": "TemplateDataPlane",
-      "condition": "[parameters('deployDataPlane')]",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-10-01",
-      "resourceGroup": "[variables('dataPlaneGroup')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroup'))]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployDataPlane.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "prefix": {
-            "value": "[parameters('prefix')]"
-          },
-          "subnet": {
-            "value": "[reference('TemplateCentralIT').outputs.dataPlaneNetwork.value.subnetId]"
-          }
-        }
-      }
-    },
-    {
-      "comments": "## Central-IT VPN Gateway Connect Template ##",
-      "name": "TemplateCentralITLocalGateway",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-06-01",
-      "resourceGroup": "[variables('centralGroup')]",
-      "dependsOn": [
-        "TemplateCentralIT",
-        "TemplateMockOnPrem"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployCentralResourcesLocalGateway.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "azureCloudVnetPrefix": {
-            "value": "[reference('TemplateMockOnPrem', '2020-06-01').outputs.mocOnpremNetworkPrefix.value]"
-          },
-          "gatewayIpAddress": {
-            "value": "[reference('TemplateMockOnPrem', '2020-06-01').outputs.vpnIp.value]"
-          },
-          "azureNetworkGatewayName": {
-            "value": "[reference('TemplateCentralIT', '2020-06-01').outputs.azureGatewayName.value]"
-          }
-        }
-      }
-    },
-    {
-      "comments": "## On-Prem VPN Gateway Connect Template ##",
-      "name": "TemplateMockOnPremLocalGateway",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-06-01",
-      "resourceGroup": "[variables('dataPlaneGroupOnPrem')]",
-      "dependsOn": [
-        "TemplateCentralIT",
-        "TemplateMockOnPrem"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployMockOnPremLocalGateway.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "gatewayIpAddress": {
-            "value": "[reference('TemplateCentralIT', '2020-06-01').outputs.vpnIp.value]"
-          },
-          "azureCloudVnetPrefix": {
-            "value": "[reference('TemplateCentralIT', '2020-06-01').outputs.mocOnpremNetwork.value]"
-          },
-          "spokeNetworkAddressPrefix": {
-            "value": "[reference('TemplateCentralIT', '2020-06-01').outputs.spokeNetworkAddressPrefix.value]"
-          },
-          "mocOnpremGatewayName": {
-            "value": "[reference('TemplateMockOnPrem', '2020-06-01').outputs.mocOnpremGatewayName.value]"
-          }
-        }
       }
     }
   ],

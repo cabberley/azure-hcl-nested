@@ -1,0 +1,42 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "prefix": {
+            "value": "cagie"
+        },
+        "identityId": {
+            "value": "/subscriptions/929e9ae0-7bb1-4563-a200-9863fe27cae4/resourcegroups/edge-cbjce/providers/Microsoft.ManagedIdentity/userAssignedIdentities/edge-cbjce-identity" // TODO: Fill in parameter value
+        },
+        "deployMock": {
+            "value": false
+        },
+        "deployDataPlane": {
+            "value": true
+        },
+        "location": {
+            "value": "eastus"
+        },
+        "templateURL": {
+            "value": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/master/templates/"
+        },
+        "serverUserName": {
+            "value": "daniel.scholl"
+        },
+        "serverPassword": {
+            "value": "AzurePassword@123"
+        },
+        "serverSize": {
+            "value": "Standard_D16s_v3"
+        },
+        "servicePrincipalClientId": {
+            "value": "fa9f7019-4ca1-4d37-b017-319ee025705b"
+        },
+        "servicePrincipalClientKey": {
+            "value": "8c2c~6N7a-AWsfI6DsR_~gL3q.6_vZp8AD"
+        },
+        "servicePrincipalObjectId": {
+            "value": "e4131cb0-c96d-42f3-9b26-b854a23a1796"
+        }
+    }
+}
