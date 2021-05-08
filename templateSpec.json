@@ -40,12 +40,6 @@
       },
       "defaultValue": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/master/templates/"
     },
-    "userIdentityName": {
-      "type": "string",
-      "metadata": {
-        "description": "User Managed Identity Name"
-      }
-    },
     "serverUserName": {
       "type": "string",
       "metadata": {
@@ -120,6 +114,7 @@
     }
   },
   "variables": {
+    "identityId": "[concat('/subscriptions/', subscription(), '/resourcegroups/edge-', parameters('prefix'), 'providers/Microsoft.ManagedIdentity/userAssignedIdentities/edge-', parameters('prefix'), '-identity')]",
     "centralGroup": "[concat('edge-', parameters('prefix'), '-centralIT')]",
     "controlPlaneGroup": "[concat('edge-', parameters('prefix'), '-controlplane')]",
     "dataPlaneGroup": "[concat('edge-', parameters('prefix'), '-dataplane')]",
@@ -137,7 +132,7 @@
       "identity": {
         "type": "UserAssigned",
         "userAssignedIdentities": {
-          "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userIdentityName'))]": {}
+          "[variables('identityId')]": {}
         }
       },
       "properties": {

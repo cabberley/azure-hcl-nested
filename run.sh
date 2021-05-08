@@ -8,7 +8,7 @@
 ## ARGUMENT INPUT            ##
 ###############################
 
-if [ ! -z $1 ]; then ADMIN_PASSWORD=$1; else echo "Password Required." && exit 1; fi
+# if [ ! -z $1 ]; then ADMIN_PASSWORD=$1; else echo "Password Required." && exit 1; fi
 
 # Random string generator - don't change this.
 if [ -z "$RAND" ]; then
