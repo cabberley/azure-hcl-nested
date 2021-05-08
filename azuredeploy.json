@@ -11,12 +11,6 @@
       "maxLength": 5,
       "defaultValue": "demo"
     },
-    "identityId": {
-      "type": "string",
-      "metadata": {
-        "description": "Application Client Id."
-      }
-    },
     "newGuid": {
       "type": "string",
       "defaultValue": "[newGuid()]",
@@ -118,26 +112,9 @@
         "Standard_E64-32ds_v4"
       ]
     }
-    // "servicePrincipalClientId": {
-    //   "type": "string",
-    //   "metadata": {
-    //     "description": "Application Client Id."
-    //   }
-    // },
-    // "servicePrincipalClientKey": {
-    //   "type": "string",
-    //   "metadata": {
-    //     "description": "Application Client Key."
-    //   }
-    // },
-    // "servicePrincipalObjectId": {
-    //   "type": "string",
-    //   "metadata": {
-    //     "description": "ObjectId of Service Principal."
-    //   }
-    // }
   },
   "variables": {
+    "identityId": "[concat('/subscriptions/', subscription(), '/resourcegroups/edge-', parameters('prefix'), 'providers/Microsoft.ManagedIdentity/userAssignedIdentities/edge-', parameters('prefix'), '-identity')]",
     "centralGroup": "[concat('edge-', parameters('prefix'), '-centralIT')]",
     "controlPlaneGroup": "[concat('edge-', parameters('prefix'), '-controlplane')]",
     "dataPlaneGroup": "[concat('edge-', parameters('prefix'), '-dataplane')]",
@@ -155,7 +132,7 @@
       "identity": {
         "type": "UserAssigned",
         "userAssignedIdentities": {
-          "[parameters('identityId')]": {}
+          "[variables('identityId')]": {}
         }
       },
       "properties": {
