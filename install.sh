@@ -60,22 +60,22 @@ user=(${login_user//@/ })
 identityId=$($az identity list --query "[?name=='edge-$RAND-identity'].id" -otsv)
 
 # Create Environment Service Principal
-principalName="http://edge-$RAND-principal"
-if [ "$($az ad sp list --display-name $principalName --query [].appId -otsv)" = "" ]; then
-  echo "================================================================================="
-  echo -n "Creating Service Principal..."
-  clientPassword=$($az ad sp create-for-rbac -n $principalName --role contributor --query password -o tsv)
-  if [ -z "$clientPassword" ]; then
-      echo "Script cannot finish because service principal was not created."
-      $az group update -n $RESOURCEGROUP --tag currentStatus=spFailed > /dev/null 2>&1
-      exit 1
-  fi
-  clientId=$($az ad sp show --id $principalName --query appId -o tsv)
-  clientOid=$($az ad sp show --id $principalName --query objectId -o tsv)
-  echo "Service Principal Created."
-  $az group update -n $RESOURCEGROUP --tag currentStatus=spSuccess > /dev/null 2>&1
-fi
-echo "done."
+# principalName="http://edge-$RAND-principal"
+# if [ "$($az ad sp list --display-name $principalName --query [].appId -otsv)" = "" ]; then
+#   echo "================================================================================="
+#   echo -n "Creating Service Principal..."
+#   clientPassword=$($az ad sp create-for-rbac -n $principalName --role contributor --query password -o tsv)
+#   if [ -z "$clientPassword" ]; then
+#       echo "Script cannot finish because service principal was not created."
+#       $az group update -n $RESOURCEGROUP --tag currentStatus=spFailed > /dev/null 2>&1
+#       exit 1
+#   fi
+#   clientId=$($az ad sp show --id $principalName --query appId -o tsv)
+#   clientOid=$($az ad sp show --id $principalName --query objectId -o tsv)
+#   echo "Service Principal Created."
+#   $az group update -n $RESOURCEGROUP --tag currentStatus=spSuccess > /dev/null 2>&1
+# fi
+# echo "done."
 
 
 ###############################
@@ -98,9 +98,9 @@ echo ""
 $az group update -n $RESOURCEGROUP --tag currentStatus=Deploy > /dev/null 2>&1
 $az deployment sub create --template-file azuredeploy.json  --no-wait \
   --location $location \
-  --parameters servicePrincipalClientId=$clientId \
-  --parameters servicePrincipalClientKey=$clientPassword \
-  --parameters servicePrincipalObjectId=$clientOid \
+  # --parameters servicePrincipalClientId=$clientId \
+  # --parameters servicePrincipalClientKey=$clientPassword \
+  # --parameters servicePrincipalObjectId=$clientOid \
   --parameters prefix=$RAND \
   --parameters identityId=$identityId \
   --parameters serverUserName=$user \

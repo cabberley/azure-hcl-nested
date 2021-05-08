@@ -117,32 +117,33 @@
         "Standard_E64-16ds_v4",
         "Standard_E64-32ds_v4"
       ]
-    },
-    "servicePrincipalClientId": {
-      "type": "string",
-      "metadata": {
-        "description": "Application Client Id."
-      }
-    },
-    "servicePrincipalClientKey": {
-      "type": "string",
-      "metadata": {
-        "description": "Application Client Key."
-      }
-    },
-    "servicePrincipalObjectId": {
-      "type": "string",
-      "metadata": {
-        "description": "ObjectId of Service Principal."
-      }
     }
+    // "servicePrincipalClientId": {
+    //   "type": "string",
+    //   "metadata": {
+    //     "description": "Application Client Id."
+    //   }
+    // },
+    // "servicePrincipalClientKey": {
+    //   "type": "string",
+    //   "metadata": {
+    //     "description": "Application Client Key."
+    //   }
+    // },
+    // "servicePrincipalObjectId": {
+    //   "type": "string",
+    //   "metadata": {
+    //     "description": "ObjectId of Service Principal."
+    //   }
+    // }
   },
   "variables": {
     "centralGroup": "[concat('edge-', parameters('prefix'), '-centralIT')]",
     "controlPlaneGroup": "[concat('edge-', parameters('prefix'), '-controlplane')]",
     "dataPlaneGroup": "[concat('edge-', parameters('prefix'), '-dataplane')]",
     "dataPlaneGroupOnPrem": "[concat('edge-', parameters('prefix'), '-onprem-mock')]",
-    "localNetworkGatewayName": "local-gateway-azure-network"
+    "localNetworkGatewayName": "local-gateway-azure-network",
+    "cliArg": "[concat('edge-', parameters('prefix'), '-principal')]"
   },
   "resources": [
     {
@@ -166,7 +167,11 @@
         "environmentVariables": [
 
         ],
-        "scriptContent": "echo 'Hello Wolrd'",
+        "arguments": "[variables('cliArg')]",
+        "scriptContent": "
+          spInfo=$($az ad sp create-for-rbac -n $principalName --role contributor -o tsv)
+          echo $spInfo > $AZ_SCRIPTS_OUTPUT_PATH
+        ",
         "supportingScriptUris": [],
         "timeout": "PT30M",
         "retentionInterval": "P1D",

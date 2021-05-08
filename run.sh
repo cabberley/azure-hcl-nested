@@ -47,6 +47,7 @@ if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/de
     clientId=$($az identity create -g $RESOURCEGROUP -n $managedIdentity --query clientId -o tsv 2>/dev/null)
     sleep 30
     $az role assignment create --role "Contributor" --scope "/subscriptions/$subId" --assignee $clientId > /dev/null 2>&1
+    $az ad app permission add --id $clientId --api 00000002-0000-0000-c000-000000000000 --api-permissions 824c81eb-e3f8-4ee6-8f6d-de7f50d565b7=Role -o none 2>/dev/null
     $az group update -n $RESOURCEGROUP --tag currentStatus=identityCreated > /dev/null 2>&1
     echo "Managed Identity:" $managedIdentity
 fi
@@ -62,7 +63,6 @@ if [ "$($az storage account check-name --name $storageName --query nameAvailable
     $az group update -n $RESOURCEGROUP --tag currentStatus=storageCreated > /dev/null 2>&1
     echo "Storage Account: " $storageName
 fi
-
 
 echo "================================================================================================================="
 if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "storageCreated" ]; then
