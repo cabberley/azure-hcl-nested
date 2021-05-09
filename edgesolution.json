@@ -58,50 +58,16 @@
         "AzCliVersion": "2.0.80",
         "environmentVariables": [
           {
-            "name": "RESOURCEGROUP",
-            "value": "[variables('centralGroup')]"
-          },
-          {
             "name": "LOCATION",
             "value": "[parameters('location')]"
           }
         ],
-        "scriptContent": "az group create -g $RESOURCEGROUP -l $Location",
+        "arguments": "[variables('centralGroup')]",
+        "primaryScriptUri": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/scripts/createGroup.sh",
         "supportingScriptUris": [],
         "timeout": "PT30M",
         "retentionInterval": "P1D",
         "cleanupPreference": "OnSuccess"
-      }
-    },
-    {
-      "comments": "## Lock Central IT Resource Group (Required) ##",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2019-10-01",
-      "name": "[concat('lock-', variables('centralGroup'))]",
-      "resourceGroup": "[variables('centralGroup')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/deploymentScripts/', variables('centralGroup'))]"
-      ],
-      "properties": {
-        "expressionEvaluationOptions": {
-          "scope": "outer"
-        },
-        "mode": "Incremental",
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "resources": [
-            {
-              "type": "Microsoft.Authorization/locks",
-              "apiVersion": "2017-04-01",
-              "name": "DontDelete",
-              "properties": {
-                "level": "CanNotDelete",
-                "notes": "Prevent deletion of the resourceGroup"
-              }
-            }
-          ]
-        }
       }
     }
   ],
