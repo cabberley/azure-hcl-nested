@@ -90,7 +90,6 @@
         }
       },
       "properties": {
-        "forceUpdateTag": "[newGuid()]",
         "containerSettings": {
           "containerGroupName": "deploymentScripts"
         },
