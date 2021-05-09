@@ -16,7 +16,7 @@
         "description": "URL of the template to upload as a deployment template."
       }
     },
-    "builtInRoleType": {
+    "subscriptionAccess": {
       "type": "string",
       "allowedValues": [
         "Owner",
@@ -24,9 +24,9 @@
         "Reader"
       ],
       "metadata": {
-        "description": "Built-in role to assign"
+        "description": "Role Access to Subscription"
       },
-      "defaultValue": "Owner"
+      "defaultValue": "Contributor"
     }
   },
   "variables": {
@@ -92,11 +92,11 @@
     },
     {
       "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "2020-10-01-preview",
+      "apiVersion": "2021-04-01-preview",
       "name": "[variables('roleAssignmentName')]",
       "dependsOn": [ "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentityName'))]" ],
       "properties": {
-        "roleDefinitionId": "[variables(parameters('builtInRoleType'))]",
+        "roleDefinitionId": "[variables(parameters('subscriptionAccess'))]",
         "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentityName')), '2015-08-31-preview').principalId]",
         "scope": "[concat('/subscriptions/', subscription().subscriptionId)]",
         "principalType": "ServicePrincipal"
