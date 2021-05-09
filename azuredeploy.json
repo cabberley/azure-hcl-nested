@@ -51,6 +51,9 @@
       "apiVersion": "2020-10-01",
       "kind": "AzureCLI",
       "name": "createGroups",
+      "dependsOn": [
+        "[resourceId('Microsoft.Authorization/roleAssignments', variables('roleAssignmentName'))]"
+      ],
       "location": "[resourceGroup().location]",
       "identity": {
         "type": "UserAssigned",
