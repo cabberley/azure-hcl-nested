@@ -90,6 +90,7 @@
         }
       },
       "properties": {
+        "forceUpdateTag": 1,
         "containerSettings": {
           "containerGroupName": "deploymentScripts"
         },
