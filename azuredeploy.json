@@ -20,11 +20,8 @@
     }
   },
   "variables": {
-    "storageAccountName": "[concat('storage', uniqueString(resourceGroup().id))]",
-    "storageBlobContainerName": "config",
     "userIdentityName": "configDeployer",
-    "roleAssignmentName": "[guid(concat(resourceGroup().id, 'contributor'))]",
-    "deploymentScriptName": "CopyConfigScript"
+    "roleAssignmentName": "[guid(concat(resourceGroup().id, 'contributor'))]"
   },
   "resources": [
     {
