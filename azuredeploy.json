@@ -1,14 +1,20 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.1",
-  "apiProfile": "",
-  "parameters": {},
+  "parameters": {
+    "newGuid": {
+      "type": "string",
+      "defaultValue": "[newGuid()]",
+      "metadata": {
+        "description": "forceUpdateTag property, used to force the execution of the script resource when no other properties have changed."
+      }
+    }
+  },
   "variables": {
     "storageAccountName": "[concat('storage', uniqueString(resourceGroup().id))]",
     "storageBlobContainerName": "config",
     "userAssignedIdentityName": "configDeployer",
-    "roleAssignmentName": "[guid(concat(resourceGroup().id, 'contributor'))]",
-    "deploymentScriptName": "CopyConfigScript"
+    "roleAssignmentName": "[guid(concat(resourceGroup().id, 'contributor'))]"
   },
   "functions": [],
   "resources": [
@@ -71,12 +77,49 @@
       "properties": {
         "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
         "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentityName')), '2015-08-31-preview').principalId]",
-        "scope": "[resourceGroup().id]",
+        "scope": "[subscription().id]",
         "principalType": "ServicePrincipal"
       }
+    },
+    {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2020-10-01",
+      "kind": "AzureCLI",
+      "name": "createTemplate",
+      "dependsOn": [ "[resourceId('Microsoft.Authorization/roleAssignments', variables('roleAssignmentName'))]" ],
+      "location": "[resourceGroup().location]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('userAssignedIdentityName'))]": {}
+        }
+      },
+      "properties": {
+        "forceUpdateTag": "[parameters('newGuid')]",
+        "containerSettings": {
+          "containerGroupName": "deploymentScripts"
+        },
+        "AzCliVersion": "2.0.80",
+        "environmentVariables": [
+          {
+            "name": "RESOURCEGROUP",
+            "value": "[resourceGroup().name]"
+          },
+          {
+            "name": "LOCATION",
+            "value": "[resourceGroup().location]"
+          }
+        ],
+        "scriptContent": "
+          wget https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/edgesolution.json -O templateSpec.json
+          sleep 3
+          az ts create --name edgeSolution  --resource-group $RESOURCEGROUP --location $LOCATION --version 1.0 --template-file ./templateSpec.json
+        ",
+        "supportingScriptUris": [],
+        "timeout": "PT30M",
+        "retentionInterval": "P1D",
+        "cleanupPreference": "OnSuccess"
+      }
     }
-  ],
-  "outputs": {
-
-  }
+  ]
 }
