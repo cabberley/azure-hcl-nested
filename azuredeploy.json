@@ -2,15 +2,6 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.1",
   "parameters": {
-    "prefix": {
-      "type": "string",
-      "metadata": {
-        "description": "Small unique string."
-      },
-      "minLength": 2,
-      "maxLength": 5,
-      "defaultValue": "demo"
-    },
     "newGuid": {
       "type": "string",
       "defaultValue": "[newGuid()]",
@@ -27,11 +18,10 @@
     }
   },
   "variables": {
-    "cleanUnique": "[toLower(replace(parameters('prefix'),'-', ''))]",
-    "storageAccountName": "[concat(variables('cleanUnique'), uniqueString(resourceGroup().id))]",
+    "storageAccountName": "[concat('edge', uniqueString(resourceGroup().id))]",
     "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
     "storageBlobContainerName": "config",
-    "userAssignedIdentityName": "configDeployer",
+    "userAssignedIdentityName": "edgeDeployer",
     "roleAssignmentName": "[guid(concat(resourceGroup().id, 'contributor'))]"
   },
   "functions": [],
@@ -41,9 +31,6 @@
       "name": "[variables('storageAccountName')]",
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2019-06-01",
-      "tags": {
-        "displayName": "[variables('storageAccountName')]"
-      },
       "location": "[resourceGroup().location]",
       "kind": "StorageV2",
       "sku": {
@@ -104,7 +91,7 @@
       "type": "Microsoft.Resources/deploymentScripts",
       "apiVersion": "2020-10-01",
       "kind": "AzureCLI",
-      "name": "createTemplate",
+      "name": "edgeScript",
       "dependsOn": [ "[resourceId('Microsoft.Authorization/roleAssignments', variables('roleAssignmentName'))]" ],
       "location": "[resourceGroup().location]",
       "identity": {
@@ -116,7 +103,7 @@
       "properties": {
         "forceUpdateTag": "[parameters('newGuid')]",
         "containerSettings": {
-          "containerGroupName": "deploymentScripts"
+          "containerGroupName": "deploymentScript"
         },
         "AzCliVersion": "2.22.1",
         "environmentVariables": [

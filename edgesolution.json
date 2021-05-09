@@ -29,15 +29,16 @@
       "type": "string",
       "metadata": {
         "description": "User Managed Identity Name"
-      }
+      },
+      "defaultValue": "edgeDeployer"
     }
   },
   "variables": {
-    "centralGroup": "[concat('edge-', parameters('prefix'), '-centralIT')]",
-    "cliArg": "[concat('edge-', parameters('prefix'), '-principal')]"
+    "centralGroup": "[concat('edge-', parameters('prefix'), '-centralIT')]"
   },
   "resources": [
     {
+      "comments": "## Create Central IT Resource Group (Required) ##",
       "type": "Microsoft.Resources/deploymentScripts",
       "apiVersion": "2020-10-01",
       "kind": "AzureCLI",
@@ -52,23 +53,20 @@
       "properties": {
         "forceUpdateTag": "[parameters('newGuid')]",
         "containerSettings": {
-          "containerGroupName": "deploymentScripts"
+          "containerGroupName": "scriptCreateCentralGroup"
         },
         "AzCliVersion": "2.0.80",
         "environmentVariables": [
           {
-            "name": "centralGroup",
+            "name": "RESOURCEGROUP",
             "value": "[variables('centralGroup')]"
           },
           {
-            "name": "location",
+            "name": "LOCATION",
             "value": "[parameters('location')]"
           }
         ],
-        "arguments": "[variables('cliArg')]",
-        "scriptContent": "
-          az group create -g $centralGroup -l $location
-        ",
+        "scriptContent": "az group create -g $RESOURCEGROUP -l $Location",
         "supportingScriptUris": [],
         "timeout": "PT30M",
         "retentionInterval": "P1D",
