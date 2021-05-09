@@ -70,12 +70,7 @@
         "environmentVariables": [
 
         ],
-        "arguments": "",
-        "scriptContent": "
-          # wget https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/edgesolution.json -O templateSpec.json
-          # sleep 3
-          # az ts create --name edgeSolution  --resource-group $ResourceGroupName --location $Location --version 1.0 --template-file ./templateSpec.json
-        ",
+        "scriptContent": " echo 'hello world' ",
         "supportingScriptUris": [],
         "timeout": "PT30M",
         "retentionInterval": "P1D",
