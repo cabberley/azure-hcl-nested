@@ -16,7 +16,7 @@
         "description": "URL of the template to upload as a deployment template."
       }
     },
-    "subscriptionAccess": {
+    "accessLevel": {
       "type": "string",
       "allowedValues": [
         "Owner",
@@ -24,7 +24,7 @@
         "Reader"
       ],
       "metadata": {
-        "description": "Role Access to Subscription"
+        "description": "Role Access Level"
       },
       "defaultValue": "Contributor"
     }
@@ -96,7 +96,7 @@
       "name": "[variables('roleAssignmentName')]",
       "dependsOn": [ "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentityName'))]" ],
       "properties": {
-        "roleDefinitionId": "[variables(parameters('subscriptionAccess'))]",
+        "roleDefinitionId": "[variables(parameters('accessLevel'))]",
         "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentityName')), '2015-08-31-preview').principalId]",
         "scope": "[resourceGroup().id]",
         "principalType": "ServicePrincipal"
