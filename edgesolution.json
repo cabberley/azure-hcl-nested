@@ -42,7 +42,7 @@
       "type": "Microsoft.Resources/deploymentScripts",
       "apiVersion": "2020-10-01",
       "kind": "AzureCLI",
-      "name": "createGroups",
+      "name": "[variables('centralGroup')]",
       "location": "[parameters('location')]",
       "identity": {
         "type": "UserAssigned",
@@ -80,7 +80,7 @@
       "name": "[concat('lock-', variables('centralGroup'))]",
       "resourceGroup": "[variables('centralGroup')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('centralGroup'))]"
+        "[resourceId('Microsoft.Resources/deploymentScripts/', variables('centralGroup'))]"
       ],
       "properties": {
         "expressionEvaluationOptions": {
