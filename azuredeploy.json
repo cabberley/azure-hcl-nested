@@ -110,11 +110,7 @@
             "value": "[resourceGroup().location]"
           }
         ],
-        "scriptContent": "
-          wget https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/edgesolution.json -O templateSpec.json
-          sleep 3
-          az ts create --name edgeSolution  --resource-group $RESOURCEGROUP --location $LOCATION --version 1.0 --template-file ./templateSpec.json
-        ",
+        "scriptContent": "curl https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/install.sh | bash ",
         "supportingScriptUris": [],
         "timeout": "PT30M",
         "retentionInterval": "P1D",
