@@ -76,6 +76,41 @@
         "scope": "[subscription()]",
         "principalType": "ServicePrincipal"
       }
+    },
+    {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2020-10-01",
+      "kind": "AzureCLI",
+      "name": "[variables('deploymentScriptName')]",
+      "location": "[resourceGroup().location]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('userIdentityName'))]": {}
+        }
+      },
+      "properties": {
+        "forceUpdateTag": "[newGuid()]",
+        "containerSettings": {
+          "containerGroupName": "deploymentScripts"
+        },
+        "AzCliVersion": "2.0.80",
+        "environmentVariables": [
+          {
+            "name": "ResourceGroupName",
+            "value": "[resourceGroup().name]"
+          },
+          {
+            "name": "Location",
+            "value": "[resourceGroup().location]"
+          }
+        ],
+        "scriptContent": " ",
+        "supportingScriptUris": [],
+        "timeout": "PT30M",
+        "retentionInterval": "P1D",
+        "cleanupPreference": "OnSuccess"
+      }
     }
   ],
   "outputs": {}
