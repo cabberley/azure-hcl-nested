@@ -25,7 +25,8 @@
       ],
       "metadata": {
         "description": "Built-in role to assign"
-      }
+      },
+      "defaultValue": "Owner"
     }
   },
   "variables": {
