@@ -8,6 +8,13 @@
       "metadata": {
         "description": "forceUpdateTag property, used to force the execution of the script resource when no other properties have changed."
       }
+    },
+    "templateURL": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/edgesolution.json",
+      "metadata": {
+        "description": "URL of the template to upload as a deployment template."
+      }
     }
   },
   "variables": {
@@ -99,7 +106,7 @@
         "containerSettings": {
           "containerGroupName": "deploymentScripts"
         },
-        "AzCliVersion": "2.0.80",
+        "AzCliVersion": "2.23.0",
         "environmentVariables": [
           {
             "name": "RESOURCEGROUP",
@@ -110,6 +117,7 @@
             "value": "[resourceGroup().location]"
           }
         ],
+        "arguments": "[parameters('templateURL')]",
         "primaryScriptUri": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/scripts/createTemplate.sh",
         "supportingScriptUris": [],
         "timeout": "PT30M",
