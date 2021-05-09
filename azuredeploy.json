@@ -74,41 +74,9 @@
         "scope": "[resourceGroup().id]",
         "principalType": "ServicePrincipal"
       }
-    },
-    {
-      "type": "Microsoft.Resources/deploymentScripts",
-      "apiVersion": "2019-10-01-preview",
-      "name": "[variables('deploymentScriptName')]",
-      "location": "[resourceGroup().location]",
-      "kind": "AzurePowerShell",
-      "dependsOn": [
-        "[resourceId('Microsoft.Authorization/roleAssignments', variables('roleAssignmentName'))]",
-        "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageAccountName'), 'default', variables('storageBlobContainerName'))]"
-      ],
-      "identity": {
-        "type": "UserAssigned",
-        "userAssignedIdentities": {
-          "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities',variables('userAssignedIdentityName'))]": {}
-        }
-      },
-      "properties": {
-        "azPowerShellVersion": "3.0",
-        "scriptContent": "
-                    Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/Azure/azure-docs-json-samples/master/mslearn-arm-deploymentscripts-sample/appsettings.json' -outfile 'appsettings.json'
-                    $StorageAccount = Get-AzStorageAccount -ResourceGroupName 'learndeploymentscript_exercise_1' | Where-Object {$_.StorageAccountName -like 'storage*'}
-                    $Blob = Set-AzStorageBlobContent -File 'appsettings.json' -Container 'config' -blob 'appsettings.json' -context $StorageAccount.Context
-                    $DeploymentScriptOutputs = @{}
-                    $DeploymentScriptOutputs['Uri'] = $Blob.ICloudBlob.Uri
-                    $DeploymentScriptOutputs['StorageUri'] = $Blob.ICloudBlob.StorageUri
-                ",
-        "retentionInterval": "P1D"
-      }
     }
   ],
   "outputs": {
-    "fileUri": {
-      "type": "string",
-      "value": "[reference(variables('deploymentScriptName')).outputs.Uri]"
-    }
+
   }
 }
