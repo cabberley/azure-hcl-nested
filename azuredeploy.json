@@ -98,7 +98,7 @@
       "properties": {
         "roleDefinitionId": "[variables(parameters('subscriptionAccess'))]",
         "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentityName')), '2015-08-31-preview').principalId]",
-        "scope": "[concat('/subscriptions/', subscription().subscriptionId)]",
+        "scope": "[resourceGroup().id]",
         "principalType": "ServicePrincipal"
       }
     },
