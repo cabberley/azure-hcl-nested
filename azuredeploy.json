@@ -65,9 +65,20 @@
         },
         "AzCliVersion": "2.0.80",
         "environmentVariables": [
-
+          {
+            "name": "RESOURCEGROUP",
+            "value": "[resourceGroup().name]"
+          },
+          {
+            "name": "LOCATION",
+            "value": "[resourceGroup().location]"
+          }
         ],
-        "scriptContent": " echo 'hello world' ",
+        "scriptContent": " 
+          wget https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/edgesolution.json -O templateSpec.json
+          sleep 3
+          az ts create --name edgeSolution  --resource-group $RESOURCEGROUP --location $LOCATION --version 1.0 --template-file ./templateSpec.json
+        ",
         "supportingScriptUris": [],
         "timeout": "PT30M",
         "retentionInterval": "P1D",
