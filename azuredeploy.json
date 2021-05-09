@@ -118,7 +118,7 @@
         "containerSettings": {
           "containerGroupName": "deploymentScripts"
         },
-        "AzCliVersion": "2.23.0",
+        "AzCliVersion": "2.22.1",
         "environmentVariables": [
           {
             "name": "RESOURCEGROUP",
