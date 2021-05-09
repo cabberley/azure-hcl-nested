@@ -2,6 +2,15 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.1",
   "parameters": {
+    "prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Small unique string."
+      },
+      "minLength": 2,
+      "maxLength": 5,
+      "defaultValue": "demo"
+    },
     "newGuid": {
       "type": "string",
       "defaultValue": "[newGuid()]",
@@ -18,7 +27,9 @@
     }
   },
   "variables": {
-    "storageAccountName": "[concat('storage', uniqueString(resourceGroup().id))]",
+    "cleanUnique": "[toLower(replace(parameters('prefix'),'-', ''))]",
+    "storageAccountName": "[concat(variables('cleanUnique'), uniqueString(resourceGroup().id))]",
+    "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
     "storageBlobContainerName": "config",
     "userAssignedIdentityName": "configDeployer",
     "roleAssignmentName": "[guid(concat(resourceGroup().id, 'contributor'))]"
@@ -26,6 +37,7 @@
   "functions": [],
   "resources": [
     {
+      "comments": "## Storage Account ##",
       "name": "[variables('storageAccountName')]",
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2019-06-01",
@@ -125,5 +137,15 @@
         "cleanupPreference": "OnSuccess"
       }
     }
-  ]
+  ],
+  "outputs": {
+    "storageAccount": {
+      "type": "object",
+      "value": {
+        "id": "[variables('storageId')]",
+        "name": "[variables('storageAccountName')]",
+        "key": "[listKeys(variables('storageId'), '2019-06-01').keys[0].value]"
+      }
+    }
+  }
 }
