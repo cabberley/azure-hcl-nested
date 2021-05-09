@@ -22,8 +22,7 @@
     "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
     "storageBlobContainerName": "config",
     "userAssignedIdentityName": "edgeDeployer",
-    "roleAssignmentName": "[guid(concat(resourceGroup().id, 'contributor'))]",
-    "Contributor": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]"
+    "roleAssignmentName": "[guid(concat(resourceGroup().id, 'contributor'))]"
   },
   "functions": [],
   "resources": [
