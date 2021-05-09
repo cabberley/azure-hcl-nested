@@ -78,13 +78,14 @@
     },
     {
       "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "2020-04-01-preview",
+      "apiVersion": "2018-09-01-preview",
       "name": "[variables('roleAssignmentName')]",
-      "scope": "[concat('/subscriptions/', subscription().subscriptionId)]",
       "dependsOn": [ "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentityName'))]" ],
       "properties": {
-        "roleDefinitionId": "[variables('Contributor')]",
-        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentityName')), '2015-08-31-preview').principalId]"
+        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentityName')), '2015-08-31-preview').principalId]",
+        "scope": "[resourceGroup().id]",
+        "principalType": "ServicePrincipal"
       }
     },
     {
