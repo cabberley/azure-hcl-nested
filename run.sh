@@ -38,14 +38,34 @@ RESOURCEGROUP="edge-${RAND}"
 ## RESOURCE CREATION         ##
 ###############################
 
-# Create Resource Group
-echo "================================================================================================================="
+echo "====================================================================================================="
 if [ ! "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "groupCreated" ]; then
     # Deploy the resource group and update Status Tag
-    echo "Creating a resource group."
-    $az group create -g "$RESOURCEGROUP" -l "$LOCATION" -o none > /dev/null 2>&1
-    $az group update -n $RESOURCEGROUP --tag currentStatus=groupCreated > /dev/null 2>&1
-    echo "Resource Group: " $RESOURCEGROUP
+    echo "Deploying the resource group."
+    $az group create -g "$RESOURCEGROUP" -l "$LOCATION" -o none 2>/dev/null
+    $az group update -n $RESOURCEGROUP --tag currentStatus=groupCreated 2>/dev/null
+    echo "done."
+fi
+
+echo "====================================================================================================="
+
+if [ ! "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "containerCreated" ]; then
+    echo "Deploying the container (might take 2-3 minutes)..."
+    $az container create -g $RESOURCEGROUP --name deployment --image danielscholl/hcl-nested  --restart-policy Never --environment-variables subId=$subId password=$password RAND=$RAND -o none 2>/dev/null
+    $az group update -n $RESOURCEGROUP --tag currentStatus=containerCreated 2>/dev/null
+    echo "done."
+fi
+
+echo "====================================================================================================="
+echo "====================================================================================================="
+echo "If cloudshell times out copy this command and run it again when cloud shell is restarted:"
+echo "     az container logs --follow -n deployment -g $RESOURCEGROUP"
+echo "====================================================================================================="
+echo "====================================================================================================="
+
+if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "containerCreated" ]; then
+    echo "Tail Logs"
+    $az container logs -n deployment -g $RESOURCEGROUP 2>/dev/null
 fi
 
 # Create Managed Identity
@@ -64,44 +84,14 @@ fi
 #     echo "Managed Identity ID: $IDENTITY_ID"
 # fi
 
-echo "================================================================================="
-echo -n "Deploying Edge Solution..."
-echo ""
-curl https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json -o azuredeploy.json > /dev/null 2>&1
-$az group update -n $RESOURCEGROUP --tag currentStatus=Deploy > /dev/null 2>&1
-
-if [ -z "$DEPLOY" ]; then
-  echo "================================================================================================================="
-  if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "storageCreated" ]; then
-      echo "Deploying the container (might take 2-3 minutes)..."
-      $az container create -g $RESOURCEGROUP --name deployment --image danielscholl/hcl-nested  --restart-policy Never --environment-variables subId=$subId password=$password RAND=$RAND -o none 2>/dev/null
-      $az group update -n $RESOURCEGROUP --tag currentStatus=containerCreated > /dev/null 2>&1
-      echo "done."
-  fi
-
-  echo "================================================================================================================="
-  echo "================================================================================================================="
-  echo "If cloudshell times out copy this command and run it again when cloud shell is restarted:"
-  echo "     az container logs --follow -n deployment -g $RESOURCEGROUP"
-  echo "================================================================================================================="
-  echo "================================================================================================================="
-  sleep 10
-
-  if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "containerCreated" ]; then
-      echo "Tail Logs"
-      $az container logs -n deployment -g $RESOURCEGROUP 2>/dev/null
-  fi
-else
-  echo "================================================================================="
-  echo -n "Deploying Edge Solution..."
-  echo ""
-  $az group update -n $RESOURCEGROUP --tag currentStatus=Deploy > /dev/null 2>&1
-  $az deployment sub create --template-file azuredeploy.json  --no-wait \
-    --location $LOCATION \
-    --parameters prefix=$RAND \
-    --parameters serverUserName=$ADMIN_USER \
-    --parameters serverPassword=$ADMIN_PASSWORD \
-    -ojsonc
-fi
-
-
+# echo "================================================================================="
+# echo -n "Deploying Edge Solution..."
+# echo ""
+# curl https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json -o azuredeploy.json > /dev/null 2>&1
+# $az group update -n $RESOURCEGROUP --tag currentStatus=Deploy > /dev/null 2>&1
+# $az deployment sub create --template-file azuredeploy.json  --no-wait \
+#   --location $LOCATION \
+#   --parameters prefix=$RAND \
+#   --parameters serverUserName=$ADMIN_USER \
+#   --parameters serverPassword=$ADMIN_PASSWORD \
+#   -ojsonc
