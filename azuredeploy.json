@@ -125,7 +125,8 @@
     "dataPlaneGroup": "[concat('edge-', parameters('prefix'), '-dataplane')]",
     "dataPlaneGroupOnPrem": "[concat('edge-', parameters('prefix'), '-onprem-mock')]",
     "localNetworkGatewayName": "local-gateway-azure-network",
-    "cliArg": "[concat('edge-', parameters('prefix'), '-principal')]"
+    "cliArg": "[concat('edge-', parameters('prefix'), '-principal')]",
+    "identityId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, 'Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('userIdentityName'))]"
   },
   "resources": [
     {
@@ -137,7 +138,7 @@
       "identity": {
         "type": "UserAssigned",
         "userAssignedIdentities": {
-          "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userIdentityName'))]": {}
+          "[variables('identityId')]": {}
         }
       },
       "properties": {

@@ -11,7 +11,7 @@ az=$(which az)
 ## ARGUMENT INPUT            ##
 ###############################
 
-# if [ ! -z $1 ]; then ADMIN_PASSWORD=$1; else echo "Password Required." && exit 1; fi
+if [ ! -z $1 ]; then ADMIN_PASSWORD=$1; else echo "Password Required." && exit 1; fi
 
 # Fetch the subscription ID
 subId=$($az account show --query id -o tsv 2>/dev/null)
@@ -63,15 +63,15 @@ if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/de
     echo "Managed Identity:" $managedIdentity
 fi
 
-if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "identityCreated" ]; then
-  echo "================================================================================="
-  echo -n "Creating the solution template"
-  echo ""
-  wget https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json -O templateSpec.json > /dev/null 2>&1
-  sleep 3
-  $az ts create --name "edgeSolution"  --resource-group $RESOURCEGROUP --location $LOCATION --version "1.0" --template-file "./templateSpec.json" -o none 2>/dev/null
-  $az group update -n $RESOURCEGROUP --tag currentStatus=templateCreated > /dev/null 2>&1
-fi
+# if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "identityCreated" ]; then
+#   echo "================================================================================="
+#   echo -n "Creating the solution template"
+#   echo ""
+#   wget https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json -O templateSpec.json > /dev/null 2>&1
+#   sleep 3
+#   $az ts create --name "edgeSolution"  --resource-group $RESOURCEGROUP --location $LOCATION --version "1.0" --template-file "./templateSpec.json" -o none 2>/dev/null
+#   $az group update -n $RESOURCEGROUP --tag currentStatus=templateCreated > /dev/null 2>&1
+# fi
 
 echo "================================================================================="
 echo -n "Deploying Edge Solution..."
@@ -80,7 +80,7 @@ $az group update -n $RESOURCEGROUP --tag currentStatus=Deploy > /dev/null 2>&1
 $az deployment sub create --template-file azuredeploy.json  --no-wait \
   --location $LOCATION \
   --parameters prefix=$RAND \
-  --parameters identityId=$IDENTITY_ID \
+  --parameters userIdentityName=$IDENTITY_ID \
   --parameters serverUserName=$ADMIN_USER \
   --parameters serverPassword=$ADMIN_PASSWORD \
   -ojsonc
