@@ -27,25 +27,25 @@ fi
 ## RESOURCE CREATION         ##
 ###############################
 
-echo "================================================================================="
-echo ""
-echo -n "Deploying Edge Solution."
+printf "================================================================================="
+printf "Deploying Edge Solution.\n"
 echo -n "  - TEMPLATE_URL: " $TEMPLATE_URL
 echo -n "  - RESOURCEGROUP: " $RESOURCEGROUP
 echo -n "  - Location: " $Location
 echo -n "  - ADMIN_USER: " $ADMIN_USER
 echo -n "  - RAND: " $RAND
-$az group update -n $RESOURCEGROUP --tag currentStatus=executorStart > /dev/null 2>&1
+echo -n "  - IDENTITY: " $IDENTITY_NAME
+$az group update -n $RESOURCEGROUP --tag currentStatus=executorStart
 sleep 3
 
-wget $TEMPLATE_URL -O templateSpec.json
+curl $TEMPLATE_URL -o azuredeploy.json
 $az group update -n $RESOURCEGROUP --tag currentStatus=executorDownloaded > /dev/null 2>&1
 sleep 3
 
-$az deployment sub create --template-file azuredeploy.json  --no-wait \
+$az deployment sub create --template-file azuredeploy.json \
   --location $Location \
   --parameters prefix=$RAND \
-  --parameters identityId=$identityId \
+  --parameters userIdentityName=$IDENTITY_NAME \
   --parameters serverUserName=$ADMIN_USER \
   --parameters serverPassword=$ADMIN_PASSWORD \
   -ojsonc
