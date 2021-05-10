@@ -82,7 +82,7 @@
             "value": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/templates/"
           }
         ],
-        "arguments": "deployOperations deployMockOnPrem deployControlPlane deployOperationsLocalGateway deployMockOnPremLocalGateway",
+        "arguments": "deployOperations deployMockOnPrem deployControlPlane connectOperationsLocalGateway connectMockOnPremLocalGateway",
         "primaryScriptUri": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/scripts/createTemplate.sh",
         "supportingScriptUris": [],
         "timeout": "PT30M",

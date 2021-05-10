@@ -109,7 +109,6 @@
   "variables": {
     "operationsGroup": "[concat('edge-', parameters('prefix'), '-operations')]",
     "controlPlaneGroup": "[concat('edge-', parameters('prefix'), '-controlplane')]",
-    "dataPlaneGroup": "[concat('edge-', parameters('prefix'), '-dataplane')]",
     "dataPlaneGroupOnPrem": "[concat('edge-', parameters('prefix'), '-onprem-mock')]"
   },
   "resources": [
@@ -197,8 +196,8 @@
       }
     },
     {
-      "comments": "## Central Resources Deployment Template ##",
-      "name": "TemplateCentralIT",
+      "comments": "## Operations Deployment Template ##",
+      "name": "TemplateOperations",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-10-01",
       "resourceGroup": "[variables('operationsGroup')]",
@@ -272,7 +271,7 @@
       }
     },
     {
-      "comments": "## Central-IT VPN Gateway Connect Template ##",
+      "comments": "## Operations VPN Gateway Connect Template ##",
       "name": "TemplateOperationsLocalGateway",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-06-01",
@@ -284,7 +283,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployOperationsLocalGateway.json')]",
+          "uri": "[concat(parameters('templateURL'), 'connectOperationsLocalGateway.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -295,7 +294,7 @@
             "value": "[reference('TemplateMockOnPrem', '2020-06-01').outputs.vpnIp.value]"
           },
           "azureNetworkGatewayName": {
-            "value": "[reference('TemplateCentralIT', '2020-06-01').outputs.azureGatewayName.value]"
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.azureGatewayName.value]"
           }
         }
       }
@@ -307,24 +306,24 @@
       "apiVersion": "2020-06-01",
       "resourceGroup": "[variables('dataPlaneGroupOnPrem')]",
       "dependsOn": [
-        "TemplateCentralIT",
+        "TemplateOperations",
         "TemplateMockOnPrem"
       ],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployMockOnPremLocalGateway.json')]",
+          "uri": "[concat(parameters('templateURL'), 'connectMockOnPremLocalGateway.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
           "gatewayIpAddress": {
-            "value": "[reference('TemplateCentralIT', '2020-06-01').outputs.vpnIp.value]"
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.vpnIp.value]"
           },
           "azureCloudVnetPrefix": {
-            "value": "[reference('TemplateCentralIT', '2020-06-01').outputs.mocOnpremNetwork.value]"
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.mocOnpremNetwork.value]"
           },
           "spokeNetworkAddressPrefix": {
-            "value": "[reference('TemplateCentralIT', '2020-06-01').outputs.spokeNetworkAddressPrefix.value]"
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.spokeNetworkAddressPrefix.value]"
           },
           "mocOnpremGatewayName": {
             "value": "[reference('TemplateMockOnPrem', '2020-06-01').outputs.mocOnpremGatewayName.value]"
