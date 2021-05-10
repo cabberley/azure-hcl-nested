@@ -37,12 +37,13 @@ if [ -f "$TEMPLATE" ]; then
   printf "--Deploy ARM Template--"
 
   $az group update -n $RESOURCEGROUP --tag currentStatus=executorTemplate:Ready > /dev/null 2>&1
-  $az deployment sub create --template-file $TEMPLATE \
+  result=$($az deployment sub create --template-file $TEMPLATE \
     --location $Location \
     --parameters prefix=$RAND \
     --parameters serverUserName=$ADMIN_USER \
-    --parameters serverPassword=$ADMIN_PASSWORD \
-    -ojsonc
+    --parameters serverPassword=$ADMIN_PASSWORD)
+  echo $result
+  echo $result | jq -c '{Result: map({id: .id})}' > $AZ_SCRIPTS_OUTPUT_PATH"
 
   $az group update -n $RESOURCEGROUP --tag currentStatus=executorTemplate:Submitted > /dev/null 2>&1
   sleep 30

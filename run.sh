@@ -76,26 +76,39 @@ $az deployment sub create --template-file azuredeploy.json  --no-wait \
   --parameters serverPassword=$ADMIN_PASSWORD \
   -ojsonc
 
+if [ -z "$DEPLOY" ]; then
+  echo "================================================================================================================="
+  if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "storageCreated" ]; then
+      echo "Deploying the container (might take 2-3 minutes)..."
+      $az container create -g $RESOURCEGROUP --name deployment --image danielscholl/hcl-nested  --restart-policy Never --environment-variables subId=$subId password=$password RAND=$RAND -o none 2>/dev/null
+      $az group update -n $RESOURCEGROUP --tag currentStatus=containerCreated > /dev/null 2>&1
+      echo "done."
+  fi
 
-exit
+  echo "================================================================================================================="
+  echo "================================================================================================================="
+  echo "If cloudshell times out copy this command and run it again when cloud shell is restarted:"
+  echo "     az container logs --follow -n deployment -g $RESOURCEGROUP"
+  echo "================================================================================================================="
+  echo "================================================================================================================="
+  sleep 10
 
-# echo "================================================================================================================="
-# if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "storageCreated" ]; then
-#     echo "Deploying the container (might take 2-3 minutes)..."
-#     $az container create -g $RESOURCEGROUP --name deployment --image danielscholl/hcl-nested  --restart-policy Never --environment-variables subId=$subId password=$password RAND=$RAND -o none 2>/dev/null
-#     $az group update -n $RESOURCEGROUP --tag currentStatus=containerCreated > /dev/null 2>&1
-#     echo "done."
-# fi
+  if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "containerCreated" ]; then
+      echo "Tail Logs"
+      $az container logs -n deployment -g $RESOURCEGROUP 2>/dev/null
+  fi
+else
+  echo "================================================================================="
+  echo -n "Deploying Edge Solution..."
+  echo ""
+  $az group update -n $RESOURCEGROUP --tag currentStatus=Deploy > /dev/null 2>&1
+  $az deployment sub create --template-file azuredeploy.json  --no-wait \
+    --location $LOCATION \
+    --parameters prefix=$RAND \
+    --parameters userIdentityId=$IDENTITY_ID \
+    --parameters serverUserName=$ADMIN_USER \
+    --parameters serverPassword=$ADMIN_PASSWORD \
+    -ojsonc
+fi
 
-# echo "================================================================================================================="
-# echo "================================================================================================================="
-# echo "If cloudshell times out copy this command and run it again when cloud shell is restarted:"
-# echo "     az container logs --follow -n deployment -g $RESOURCEGROUP"
-# echo "================================================================================================================="
-# echo "================================================================================================================="
-# sleep 10
 
-# if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "containerCreated" ]; then
-#     echo "Tail Logs"
-#     $az container logs -n deployment -g $RESOURCEGROUP 2>/dev/null
-# fi
