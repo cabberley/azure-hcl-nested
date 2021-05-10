@@ -40,7 +40,8 @@ else
   $az group update -n $RESOURCEGROUP --tag currentStatus=executorDownload:Failed
 fi
 
-if [ ! "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "executorDownload:Success" ]; then
+
+if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "executorDownload:Success" ]; then
     printf "================================================================================="
     printf "Deploy ARM Template."
     $az group update -n $RESOURCEGROUP --tag currentStatus=executorTemplate:Ready > /dev/null 2>&1
