@@ -30,15 +30,11 @@ TEMPLATE="azuredeploy.json"
 ## RESOURCE CREATION         ##
 ###############################
 
-printf "================================================================================="
-printf "Edge Solution."
-
 $az group update -n $RESOURCEGROUP --tag currentStatus=executorDownload:Ready
 curl $TEMPLATE_URL -o $TEMPLATE
 
 if [ -f "$TEMPLATE" ]; then
-  printf "================================================================================="
-  printf "Deploy ARM Template."
+  printf "--Deploy ARM Template--"
 
   $az group update -n $RESOURCEGROUP --tag currentStatus=executorTemplate:Ready > /dev/null 2>&1
   $az deployment sub create --template-file $TEMPLATE \
@@ -46,10 +42,10 @@ if [ -f "$TEMPLATE" ]; then
     --parameters prefix=$RAND \
     --parameters serverUserName=$ADMIN_USER \
     --parameters serverPassword=$ADMIN_PASSWORD \
-    -ojsonc > $AZ_SCRIPTS_OUTPUT_PATH
+    -ojsonc
 
   $az group update -n $RESOURCEGROUP --tag currentStatus=executorTemplate:Submitted > /dev/null 2>&1
-
+  sleep 30
 else
   $az group update -n $RESOURCEGROUP --tag currentStatus=executorDownload:Failed
 fi
