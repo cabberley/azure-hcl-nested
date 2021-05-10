@@ -8,7 +8,8 @@
         "description": "Small unique string."
       },
       "minLength": 3,
-      "maxLength": 6
+      "maxLength": 6,
+      "defaultValue": "demo"
     },
     "configureSitetosite": {
       "type": "bool",
@@ -27,7 +28,8 @@
       ]
     },
     "adminUserName": {
-      "type": "string"
+      "type": "string",
+      "defaultValue": "azureUser"
     },
     "adminPassword": {
       "type": "securestring"
@@ -66,7 +68,8 @@
         "description": "Virtual Machine 1 Server Name."
       },
       "minLength": 2,
-      "maxLength": 4
+      "maxLength": 4,
+      "defaultValue": "hci"
     },
     "domainName": {
       "type": "string",
