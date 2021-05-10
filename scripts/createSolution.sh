@@ -29,26 +29,27 @@ TEMPLATE="azuredeploy.json"
 ###############################
 
 printf "================================================================================="
-printf "Deploying Edge Solution."
+printf "Edge Solution."
 
-$az group update -n $RESOURCEGROUP --tag currentStatus=executorStart
+$az group update -n $RESOURCEGROUP --tag currentStatus=executorDownload:Ready
 curl $TEMPLATE_URL -o $TEMPLATE
 
 if [ -f "$TEMPLATE" ]; then
-  $az group update -n $RESOURCEGROUP --tag currentStatus=executorDownloaded:Success
+  $az group update -n $RESOURCEGROUP --tag currentStatus=executorDownload:Success
 else
-  $az group update -n $RESOURCEGROUP --tag currentStatus=executorDownloaded:Failed
+  $az group update -n $RESOURCEGROUP --tag currentStatus=executorDownload:Failed
 fi
-exit
 
-$az deployment sub create --template-file $TEMPLATE \
-  --location $Location \
-  --parameters prefix=$RAND \
-  --parameters userIdentityName=$IDENTITY_NAME \
-  --parameters serverUserName=$ADMIN_USER \
-  --parameters serverPassword=$ADMIN_PASSWORD \
-  -ojsonc
-$az group update -n $RESOURCEGROUP --tag currentStatus=executorCompleted > /dev/null 2>&1
-sleep 3
-
-echo "================================================================================="
+if [ ! "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "executorDownload:Success" ]; then
+    printf "================================================================================="
+    printf "Deploy ARM Template."
+    $az group update -n $RESOURCEGROUP --tag currentStatus=executorTemplate:Ready > /dev/null 2>&1
+    $az deployment sub create --template-file $TEMPLATE \
+      --location $Location \
+      --parameters prefix=$RAND \
+      --parameters userIdentityName=$IDENTITY_NAME \
+      --parameters serverUserName=$ADMIN_USER \
+      --parameters serverPassword=$ADMIN_PASSWORD \
+      -ojsonc
+    $az group update -n $RESOURCEGROUP --tag currentStatus=executorTemplate:Sent > /dev/null 2>&1
+fi
