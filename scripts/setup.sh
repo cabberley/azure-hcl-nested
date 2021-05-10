@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-#  Purpose: Initialize the common resources necessary for building infrastructure.
+#  Purpose: Initialize the deployable templates necessary for building the solution.
 #  Usage:
-#    run.sh
+#    setup.sh
 
 # Get commandline for Azure CLI
 az=$(which az)
