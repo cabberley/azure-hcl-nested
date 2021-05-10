@@ -61,6 +61,7 @@ if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/de
     IDENTITY_ID=$($az identity list --query "[?name=='$managedIdentity'].id" -otsv)
     $az group update -n $RESOURCEGROUP --tag currentStatus=identityCreated > /dev/null 2>&1
     echo "Managed Identity:" $managedIdentity
+    echo "Managed Identity ID: $IDENTITY_ID"
 fi
 
 # if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "identityCreated" ]; then
