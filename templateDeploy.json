@@ -79,7 +79,7 @@
           },
           {
             "name": "TEMPLATE_URL",
-            "vaule": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/templates/"
+            "value": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/templates/"
           }
         ],
         "arguments": "deployCentralResources deployControlPlane",
