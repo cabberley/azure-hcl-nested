@@ -11,11 +11,11 @@ This deployment uses the portal to host the templates and then allow for repeata
 
 This deployment uses the cloud shell to provision a full deployment automatically.
 
-The Azure Cloud Shell can be run from the Portal, VSCode, Windows Terminal and it is also able to be used as a stand-alone experience by navigating to the https://shell.azure.com address.
-
 Run the following script from azure cloud shell.
 
 ```bash
 PASSWORD="<admin_password>"
 wget -O - https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/scripts/setup.sh | bash -s -- $PASSWORD
 ```
+
+> The Azure Cloud Shell can be run from the Portal, VSCode, Windows Terminal and it is also able to be used as a stand-alone experience by navigating to the https://shell.azure.com address.
