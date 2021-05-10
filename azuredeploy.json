@@ -107,28 +107,28 @@
     }
   },
   "variables": {
-    "centralGroup": "[concat('edge-', parameters('prefix'), '-centralIT')]",
+    "operationsGroup": "[concat('edge-', parameters('prefix'), '-operations')]",
     "controlPlaneGroup": "[concat('edge-', parameters('prefix'), '-controlplane')]",
     "dataPlaneGroup": "[concat('edge-', parameters('prefix'), '-dataplane')]",
     "dataPlaneGroupOnPrem": "[concat('edge-', parameters('prefix'), '-onprem-mock')]"
   },
   "resources": [
     {
-      "comments": "## Central Resource Group (Required) ##",
+      "comments": "## Operations Resource Group (Required) ##",
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2020-06-01",
       "location": "[parameters('location')]",
-      "name": "[variables('centralGroup')]",
+      "name": "[variables('operationsGroup')]",
       "properties": {}
     },
     {
-      "comments": "## Lock Central IT Resource Group (Required) ##",
+      "comments": "## Lock Operations IT Resource Group (Required) ##",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
-      "name": "[concat('lock-', variables('centralGroup'))]",
-      "resourceGroup": "[variables('centralGroup')]",
+      "name": "[concat('lock-', variables('operationsGroup'))]",
+      "resourceGroup": "[variables('operationsGroup')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('centralGroup'))]"
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('operationsGroup'))]"
       ],
       "properties": {
         "expressionEvaluationOptions": {
@@ -197,27 +197,18 @@
       }
     },
     {
-      "comments": "## Data Plane Resource Group (Optional) ##",
-      "condition": "[parameters('deployDataPlane')]",
-      "type": "Microsoft.Resources/resourceGroups",
-      "apiVersion": "2021-04-01",
-      "location": "[parameters('location')]",
-      "name": "[variables('dataPlaneGroup')]",
-      "properties": {}
-    },
-    {
       "comments": "## Central Resources Deployment Template ##",
       "name": "TemplateCentralIT",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-10-01",
-      "resourceGroup": "[variables('centralGroup')]",
+      "resourceGroup": "[variables('operationsGroup')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('centralGroup'))]"
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('operationsGroup'))]"
       ],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployCentralResources.json')]",
+          "uri": "[concat(parameters('templateURL'), 'deployOperations.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {}
@@ -281,45 +272,19 @@
       }
     },
     {
-      "comments": "## Data Plane Resources Deployment Template ##",
-      "name": "TemplateDataPlane",
-      "condition": "[parameters('deployDataPlane')]",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-10-01",
-      "resourceGroup": "[variables('dataPlaneGroup')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroup'))]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployDataPlane.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "prefix": {
-            "value": "[parameters('prefix')]"
-          },
-          "subnet": {
-            "value": "[reference('TemplateCentralIT').outputs.dataPlaneNetwork.value.subnetId]"
-          }
-        }
-      }
-    },
-    {
       "comments": "## Central-IT VPN Gateway Connect Template ##",
-      "name": "TemplateCentralITLocalGateway",
+      "name": "TemplateOperationsLocalGateway",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-06-01",
-      "resourceGroup": "[variables('centralGroup')]",
+      "resourceGroup": "[variables('operationsGroup')]",
       "dependsOn": [
-        "TemplateCentralIT",
+        "TemplateOperations",
         "TemplateMockOnPrem"
       ],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(parameters('templateURL'), 'deployCentralResourcesLocalGateway.json')]",
+          "uri": "[concat(parameters('templateURL'), 'deployOperationsLocalGateway.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {

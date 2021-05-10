@@ -65,7 +65,7 @@
       "properties": {
         "forceUpdateTag": "[parameters('updateGuid')]",
         "containerSettings": {
-          "containerGroupName": "deploymentScript"
+          "containerGroupName": "scriptExecutor"
         },
         "AzCliVersion": "2.22.1",
         "environmentVariables": [
@@ -82,7 +82,7 @@
             "value": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/templates/"
           }
         ],
-        "arguments": "deployCentralResources deployMockOnPrem deployCentralResourcesLocalGateway deployMockOnPremLocalGateway",
+        "arguments": "deployOperations deployMockOnPrem deployControlPlane deployOperationsLocalGateway deployMockOnPremLocalGateway",
         "primaryScriptUri": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/scripts/createTemplate.sh",
         "supportingScriptUris": [],
         "timeout": "PT30M",

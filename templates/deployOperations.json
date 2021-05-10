@@ -9,7 +9,7 @@
     "hubNetwork": {
       "type": "object",
       "defaultValue": {
-        "name": "CommonResources-vnet-hub",
+        "name": "Operations-vnet-hub",
         "addressPrefix": "10.0.0.0/20"
       }
     },
