@@ -95,9 +95,14 @@
         "supportingScriptUris": [],
         "timeout": "PT30M",
         "retentionInterval": "P1D",
-        "cleanupPreference": "OnSuccess"
+        "cleanupPreference": "OnExpiration"
       }
     }
   ],
-  "outputs": {}
+  "outputs": {
+    "result": {
+      "value": "[reference('createSolution.sh').outputs]",
+      "type": "object"
+    }
+  }
 }

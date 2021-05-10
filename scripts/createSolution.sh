@@ -37,7 +37,7 @@ curl $TEMPLATE_URL -o $TEMPLATE
 if [ -f "$TEMPLATE" ]; then
   printf "================================================================================="
   printf "Deploy ARM Template."
-  
+
   $az group update -n $RESOURCEGROUP --tag currentStatus=executorTemplate:Ready > /dev/null 2>&1
   $az deployment sub create --template-file $TEMPLATE \
     --location $Location \
@@ -45,8 +45,10 @@ if [ -f "$TEMPLATE" ]; then
     --parameters userIdentityName=$IDENTITY_NAME \
     --parameters serverUserName=$ADMIN_USER \
     --parameters serverPassword=$ADMIN_PASSWORD \
-    -ojsonc
-  $az group update -n $RESOURCEGROUP --tag currentStatus=executorTemplate:Sent > /dev/null 2>&1
+    -ojsonc > $AZ_SCRIPTS_OUTPUT_PATH
+
+  sleep 30
+  $az group update -n $RESOURCEGROUP --tag currentStatus=executorTemplate:Submitted > /dev/null 2>&1
 
 else
   $az group update -n $RESOURCEGROUP --tag currentStatus=executorDownload:Failed
