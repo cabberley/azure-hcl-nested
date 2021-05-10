@@ -15,8 +15,6 @@ The Azure Cloud Shell can be run from the Portal, VSCode, Windows Terminal and i
 
 Run the following script from azure cloud shell.
 
-> This script requires the logged in user to have an `owner` role on the subscription.
-
 ```bash
 PASSWORD="<admin_password>"
 wget -O - https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/scripts/setup.sh | bash -s -- $PASSWORD
