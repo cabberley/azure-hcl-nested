@@ -54,7 +54,7 @@
       "type": "Microsoft.Resources/deploymentScripts",
       "apiVersion": "2020-10-01",
       "kind": "AzureCLI",
-      "name": "createGroup.sh",
+      "name": "createSolution.sh",
       "location": "[parameters('regionLocation')]",
       "identity": {
         "type": "UserAssigned",
@@ -65,7 +65,7 @@
       "properties": {
         "forceUpdateTag": "[parameters('newGuid')]",
         "containerSettings": {
-          "containerGroupName": "scriptCreateCentralGroup"
+          "containerGroupName": "solutionExecutor"
         },
         "AzCliVersion": "2.0.80",
         "environmentVariables": [

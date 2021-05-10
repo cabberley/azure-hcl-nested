@@ -28,8 +28,13 @@ fi
 ###############################
 
 echo "================================================================================="
-echo -n "Deploying Edge Solution."
-echo ""
+echo "Deploying Edge Solution."
+echo "  - TEMPLATE_URL: " $TEMPLATE_URL
+echo "  - RESOURCEGROUP: " $RESOURCEGROUP
+echo "  - Location: " $Location
+echo "  - ADMIN_USER: " $ADMIN_USER
+echo "  - RAND: " $RAND
+sleep 3
 wget $TEMPLATE_URL -O templateSpec.json > /dev/null 2>&1
 sleep 3
 
