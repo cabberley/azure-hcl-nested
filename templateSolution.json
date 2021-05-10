@@ -35,7 +35,8 @@
       "metadata": {
         "description": "Windows SA Account UserName"
       },
-      "minLength": 5
+      "minLength": 5,
+      "defaultValue": "azureUser"
     },
     "adminPassword": {
       "type": "securestring",
