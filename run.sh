@@ -38,6 +38,19 @@ RESOURCEGROUP="edge-${RAND}"
 ## RESOURCE CREATION         ##
 ###############################
 
+echo "================================================================================="
+echo -n "Deploying Edge Solution..."
+echo ""
+curl https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json -o azuredeploy.json > /dev/null 2>&1
+$az deployment sub create --template-file azuredeploy.json  --no-wait \
+  --location $LOCATION \
+  --parameters prefix=$RAND \
+  --parameters serverUserName=$ADMIN_USER \
+  --parameters serverPassword=$ADMIN_PASSWORD \
+  -ojsonc
+
+exit
+
 echo "====================================================================================================="
 if [ ! "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "groupCreated" ]; then
     # Deploy the resource group and update Status Tag
@@ -51,7 +64,7 @@ echo "==========================================================================
 
 if [ ! "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "containerCreated" ]; then
     echo "Deploying the container (might take 2-3 minutes)..."
-    $az container create -g $RESOURCEGROUP --name deployment --image danielscholl/hcl-nested  --restart-policy Never --environment-variables subId=$subId password=$password RAND=$RAND -o none 2>/dev/null
+    $az container create -g $RESOURCEGROUP --name deployment --image danielscholl/hcl-nested  --restart-policy Never --environment-variables subId=$subId password=$ADMIN_PASSWORD RAND=$RAND -o none 2>/dev/null
     $az group update -n $RESOURCEGROUP --tag currentStatus=containerCreated 2>/dev/null
     echo "done."
 fi
@@ -84,14 +97,4 @@ fi
 #     echo "Managed Identity ID: $IDENTITY_ID"
 # fi
 
-# echo "================================================================================="
-# echo -n "Deploying Edge Solution..."
-# echo ""
-# curl https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json -o azuredeploy.json > /dev/null 2>&1
-# $az group update -n $RESOURCEGROUP --tag currentStatus=Deploy > /dev/null 2>&1
-# $az deployment sub create --template-file azuredeploy.json  --no-wait \
-#   --location $LOCATION \
-#   --parameters prefix=$RAND \
-#   --parameters serverUserName=$ADMIN_USER \
-#   --parameters serverPassword=$ADMIN_PASSWORD \
-#   -ojsonc
+
