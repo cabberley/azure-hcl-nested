@@ -23,26 +23,25 @@ if [ -z "$RAND" ]; then
     RAND="$(echo $RANDOM | tr '[0-9]' '[a-z]')"
 fi
 
+TEMPLATE="azuredeploy.json"
 ###############################
 ## RESOURCE CREATION         ##
 ###############################
 
 printf "================================================================================="
-printf "Deploying Edge Solution.\n"
-echo -n "  - TEMPLATE_URL: " $TEMPLATE_URL
-echo -n "  - RESOURCEGROUP: " $RESOURCEGROUP
-echo -n "  - Location: " $Location
-echo -n "  - ADMIN_USER: " $ADMIN_USER
-echo -n "  - RAND: " $RAND
-echo -n "  - IDENTITY: " $IDENTITY_NAME
+printf "Deploying Edge Solution."
+
 $az group update -n $RESOURCEGROUP --tag currentStatus=executorStart
-sleep 3
+curl $TEMPLATE_URL -o $TEMPLATE
 
-curl $TEMPLATE_URL -o azuredeploy.json
-$az group update -n $RESOURCEGROUP --tag currentStatus=executorDownloaded > /dev/null 2>&1
-sleep 3
+if [ -f "$TEMPLATE" ]; then
+  $az group update -n $RESOURCEGROUP --tag currentStatus=executorDownloaded:Success
+else
+  $az group update -n $RESOURCEGROUP --tag currentStatus=executorDownloaded:Failed
+fi
+exit
 
-$az deployment sub create --template-file azuredeploy.json \
+$az deployment sub create --template-file $TEMPLATE \
   --location $Location \
   --parameters prefix=$RAND \
   --parameters userIdentityName=$IDENTITY_NAME \
