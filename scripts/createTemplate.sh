@@ -22,7 +22,7 @@ do
     echo "$var"
     wget "$TEMPLATE_URL/$var.json" -O templateSpec.json > /dev/null 2>&1
     sleep 3
-    $az ts create --name $var  --resource-group $RESOURCEGROUP --location $Location --version "1.0" --template-file "./templateSpec.json" -o none 2>/dev/null
+    $az ts create --name "$var.json"  --resource-group $RESOURCEGROUP --location $Location --version "1.0" --template-file "./templateSpec.json" -o none 2>/dev/null
 done
 #$az group update -n $RESOURCEGROUP --tag currentStatus=templateCreated > /dev/null 2>&1
 echo "================================================================================="
