@@ -78,11 +78,11 @@
             "value": "[resourceGroup().location]"
           },
           {
-            "name": "URL",
+            "name": "TEMPLATE_URL",
             "vaule": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/templates/"
           }
         ],
-        "arguments": "deployCentralResources.json deployControlPlane.json",
+        "arguments": "deployCentralResources deployControlPlane",
         "primaryScriptUri": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/scripts/createTemplate.sh",
         "supportingScriptUris": [],
         "timeout": "PT30M",
