@@ -21,7 +21,7 @@
       "metadata": {
         "description": "User Managed Identity Name"
       },
-      "defaultValue": "edgeDeployer"
+      "defaultValue": "edgeDeployer-identity"
     },
     "templateURL": {
       "type": "string",

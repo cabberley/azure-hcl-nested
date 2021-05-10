@@ -20,6 +20,6 @@ echo "==========================================================================
 echo "Creating the solution template"
 wget $TEMPLATE_URL -O templateSpec.json > /dev/null 2>&1
 sleep 3
-$az ts create --name "edgeSolution"  --resource-group $RESOURCEGROUP --location $Location --version "1.0" --template-file "./templateSpec.json" -o none 2>/dev/null
+$az ts create --name "edgeSolution.json"  --resource-group $RESOURCEGROUP --location $Location --version "1.0" --template-file "./templateSpec.json" -o none 2>/dev/null
 $az group update -n $RESOURCEGROUP --tag currentStatus=templateCreated > /dev/null 2>&1
 echo "================================================================================="
