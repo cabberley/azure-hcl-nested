@@ -71,7 +71,7 @@
         "AzCliVersion": "2.0.80",
         "environmentVariables": [
           {
-            "name": "LOCATION",
+            "name": "REGION",
             "value": "[parameters('regionLocation')]"
           },
           {
@@ -92,7 +92,7 @@
         "supportingScriptUris": [],
         "timeout": "PT30M",
         "retentionInterval": "P1D",
-        "cleanupPreference": "OnSuccess"
+        "cleanupPreference": "OnExpiration"
       }
     }
   ],
