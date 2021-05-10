@@ -49,33 +49,26 @@ if [ ! "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/
 fi
 
 # Create Managed Identity
-IDENTITY_NAME="edge-${RAND}-identity"
-echo "================================================================================================================="
-if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "groupCreated" ]; then
-    # Deploy the user managed identity and update Status Tag
-    echo "Creating a user managed identity."
-    clientId=$($az identity create -g $RESOURCEGROUP -n $IDENTITY_NAME --query clientId -o tsv 2>/dev/null)
-    sleep 30
-    $az role assignment create --role "Contributor" --scope "/subscriptions/$subId" --assignee $clientId > /dev/null 2>&1
-    $az ad app permission add --id $clientId --api 00000002-0000-0000-c000-000000000000 --api-permissions 824c81eb-e3f8-4ee6-8f6d-de7f50d565b7=Role -o none 2>/dev/null
-    IDENTITY_ID=$($az identity list --query "[?name=='$IDENTITY_NAME'].id" -otsv)
-    $az group update -n $RESOURCEGROUP --tag currentStatus=identityCreated > /dev/null 2>&1
-    echo "Managed Identity:" $IDENTITY_NAME
-    echo "Managed Identity ID: $IDENTITY_ID"
-fi
+# IDENTITY_NAME="edge-${RAND}-identity"
+# echo "================================================================================================================="
+# if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "groupCreated" ]; then
+#     # Deploy the user managed identity and update Status Tag
+#     echo "Creating a user managed identity."
+#     clientId=$($az identity create -g $RESOURCEGROUP -n $IDENTITY_NAME --query clientId -o tsv 2>/dev/null)
+#     sleep 30
+#     $az role assignment create --role "Contributor" --scope "/subscriptions/$subId" --assignee $clientId > /dev/null 2>&1
+#     $az ad app permission add --id $clientId --api 00000002-0000-0000-c000-000000000000 --api-permissions 824c81eb-e3f8-4ee6-8f6d-de7f50d565b7=Role -o none 2>/dev/null
+#     IDENTITY_ID=$($az identity list --query "[?name=='$IDENTITY_NAME'].id" -otsv)
+#     $az group update -n $RESOURCEGROUP --tag currentStatus=identityCreated > /dev/null 2>&1
+#     echo "Managed Identity:" $IDENTITY_NAME
+#     echo "Managed Identity ID: $IDENTITY_ID"
+# fi
 
 echo "================================================================================="
 echo -n "Deploying Edge Solution..."
 echo ""
 curl https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json -o azuredeploy.json > /dev/null 2>&1
 $az group update -n $RESOURCEGROUP --tag currentStatus=Deploy > /dev/null 2>&1
-$az deployment sub create --template-file azuredeploy.json  --no-wait \
-  --location $LOCATION \
-  --parameters prefix=$RAND \
-  --parameters userIdentityId=$IDENTITY_ID \
-  --parameters serverUserName=$ADMIN_USER \
-  --parameters serverPassword=$ADMIN_PASSWORD \
-  -ojsonc
 
 if [ -z "$DEPLOY" ]; then
   echo "================================================================================================================="
@@ -106,7 +99,6 @@ else
   $az deployment sub create --template-file azuredeploy.json  --no-wait \
     --location $LOCATION \
     --parameters prefix=$RAND \
-    --parameters userIdentityId=$IDENTITY_ID \
     --parameters serverUserName=$ADMIN_USER \
     --parameters serverPassword=$ADMIN_PASSWORD \
     -ojsonc
