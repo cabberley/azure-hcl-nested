@@ -2,15 +2,6 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "prefix": {
-      "type": "string",
-      "metadata": {
-        "description": "Small unique string."
-      },
-      "minLength": 2,
-      "maxLength": 5,
-      "defaultValue": "demo"
-    },
     "newGuid": {
       "type": "string",
       "defaultValue": "[newGuid()]",
@@ -18,7 +9,7 @@
         "description": "forceUpdateTag property, used to force the execution of the script resource when no other properties have changed."
       }
     },
-    "location": {
+    "regionLocation": {
       "type": "string",
       "metadata": {
         "description": "Small unique string."
@@ -31,10 +22,31 @@
         "description": "User Managed Identity Name"
       },
       "defaultValue": "edgeDeployer"
+    },
+    "templateURL": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json",
+      "metadata": {
+        "description": "URL of the solution to deploy."
+      }
+    },
+    "adminUser": {
+      "type": "string",
+      "metadata": {
+        "description": "Windows SA Account UserName"
+      },
+      "minLength": 5
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Windows SA Account Password"
+      },
+      "minLength": 10
     }
   },
   "variables": {
-    "centralGroup": "[concat('edge-', parameters('prefix'), '-centralIT')]"
+    "scriptURL": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/scripts/createSolution.sh"
   },
   "resources": [
     {
@@ -43,7 +55,7 @@
       "apiVersion": "2020-10-01",
       "kind": "AzureCLI",
       "name": "createGroup.sh",
-      "location": "[parameters('location')]",
+      "location": "[parameters('regionLocation')]",
       "identity": {
         "type": "UserAssigned",
         "userAssignedIdentities": {
@@ -59,11 +71,23 @@
         "environmentVariables": [
           {
             "name": "LOCATION",
-            "value": "[parameters('location')]"
+            "value": "[parameters('regionLocation')]"
+          },
+          {
+            "name": "RESOURCEGROUP",
+            "value": "[resourceGroup().name]"
+          },
+          {
+            "name": "ADMIN_USER",
+            "value": "[parameters('adminUser')]"
+          },
+          {
+            "name": "ADMIN_PASSWORD",
+            "value": "[parameters('adminPassword')]"
           }
         ],
-        "arguments": "[variables('centralGroup')]",
-        "primaryScriptUri": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/scripts/createGroup.sh",
+        "arguments": "[parameters('templateURL')]",
+        "primaryScriptUri": "[variables('scriptURL')]",
         "supportingScriptUris": [],
         "timeout": "PT30M",
         "retentionInterval": "P1D",

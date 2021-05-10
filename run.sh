@@ -4,15 +4,27 @@
 #  Usage:
 #    run.sh
 
+# Get commandline for Azure CLI
+az=$(which az)
+
 ###############################
 ## ARGUMENT INPUT            ##
 ###############################
 
 # if [ ! -z $1 ]; then ADMIN_PASSWORD=$1; else echo "Password Required." && exit 1; fi
 
+# Fetch the subscription ID
+subId=$($az account show --query id -o tsv 2>/dev/null)
+
 # Random string generator - don't change this.
 if [ -z "$RAND" ]; then
     RAND="$(echo $RANDOM | tr '[0-9]' '[a-z]')"
+fi
+
+# Establish the User
+if [ -z "$ADMIN_USER" ]; then
+  login_user=$($az account show --query user.name -otsv)
+  ADMIN_USER=(${login_user//@/ })
 fi
 
 if [ -z "$LOCATION" ]; then
@@ -22,15 +34,9 @@ fi
 RESOURCEGROUP="edge-${RAND}"
 
 
-# Get commandline for Azure CLI
-az=$(which az)
-
-# Fetch the CloudShell subscription ID
-subId=$($az account show --query id -o tsv 2>/dev/null)
-
-# Establish the User
-login_user=$($az account show --query user.name -otsv)
-ADMIN_USER=(${login_user//@/ })
+###############################
+## RESOURCE CREATION         ##
+###############################
 
 # Create Resource Group
 echo "================================================================================================================="
@@ -66,9 +72,6 @@ if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/de
   $az ts create --name "edgeSolution"  --resource-group $RESOURCEGROUP --location $LOCATION --version "1.0" --template-file "./templateSpec.json" -o none 2>/dev/null
   $az group update -n $RESOURCEGROUP --tag currentStatus=templateCreated > /dev/null 2>&1
 fi
-
-
-exit
 
 echo "================================================================================="
 echo -n "Deploying Edge Solution..."

@@ -1,6 +1,6 @@
 # Project Specific Files
 .ssh
-azuredeploy.parameters.json
+*.parameters.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
