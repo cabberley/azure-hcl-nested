@@ -35,22 +35,19 @@ $az group update -n $RESOURCEGROUP --tag currentStatus=executorDownload:Ready
 curl $TEMPLATE_URL -o $TEMPLATE
 
 if [ -f "$TEMPLATE" ]; then
-  $az group update -n $RESOURCEGROUP --tag currentStatus=executorDownload:Success
+  printf "================================================================================="
+  printf "Deploy ARM Template."
+  
+  $az group update -n $RESOURCEGROUP --tag currentStatus=executorTemplate:Ready > /dev/null 2>&1
+  $az deployment sub create --template-file $TEMPLATE \
+    --location $Location \
+    --parameters prefix=$RAND \
+    --parameters userIdentityName=$IDENTITY_NAME \
+    --parameters serverUserName=$ADMIN_USER \
+    --parameters serverPassword=$ADMIN_PASSWORD \
+    -ojsonc
+  $az group update -n $RESOURCEGROUP --tag currentStatus=executorTemplate:Sent > /dev/null 2>&1
+
 else
   $az group update -n $RESOURCEGROUP --tag currentStatus=executorDownload:Failed
-fi
-
-
-if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "executorDownload:Success" ]; then
-    printf "================================================================================="
-    printf "Deploy ARM Template."
-    $az group update -n $RESOURCEGROUP --tag currentStatus=executorTemplate:Ready > /dev/null 2>&1
-    $az deployment sub create --template-file $TEMPLATE \
-      --location $Location \
-      --parameters prefix=$RAND \
-      --parameters userIdentityName=$IDENTITY_NAME \
-      --parameters serverUserName=$ADMIN_USER \
-      --parameters serverPassword=$ADMIN_PASSWORD \
-      -ojsonc
-    $az group update -n $RESOURCEGROUP --tag currentStatus=executorTemplate:Sent > /dev/null 2>&1
 fi
