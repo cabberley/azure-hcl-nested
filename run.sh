@@ -48,38 +48,9 @@ $az deployment sub create --template-file azuredeploy.json  --no-wait \
   --parameters serverUserName=$ADMIN_USER \
   --parameters serverPassword=$ADMIN_PASSWORD \
   -ojsonc
+echo "done."
+sleep 10
 
-exit
-
-echo "====================================================================================================="
-if [ ! "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "groupCreated" ]; then
-    # Deploy the resource group and update Status Tag
-    echo "Deploying the resource group."
-    $az group create -g "$RESOURCEGROUP" -l "$LOCATION" -o none 2>/dev/null
-    $az group update -n $RESOURCEGROUP --tag currentStatus=groupCreated 2>/dev/null
-    echo "done."
-fi
-
-echo "====================================================================================================="
-
-if [ ! "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "containerCreated" ]; then
-    echo "Deploying the container (might take 2-3 minutes)..."
-    $az container create -g $RESOURCEGROUP --name deployment --image danielscholl/hcl-nested  --restart-policy Never --environment-variables subId=$subId password=$ADMIN_PASSWORD RAND=$RAND -o none 2>/dev/null
-    $az group update -n $RESOURCEGROUP --tag currentStatus=containerCreated 2>/dev/null
-    echo "done."
-fi
-
-echo "====================================================================================================="
-echo "====================================================================================================="
-echo "If cloudshell times out copy this command and run it again when cloud shell is restarted:"
-echo "     az container logs --follow -n deployment -g $RESOURCEGROUP"
-echo "====================================================================================================="
-echo "====================================================================================================="
-
-if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "containerCreated" ]; then
-    echo "Tail Logs"
-    $az container logs -n deployment -g $RESOURCEGROUP 2>/dev/null
-fi
 
 # Create Managed Identity
 # IDENTITY_NAME="edge-${RAND}-identity"
@@ -96,5 +67,4 @@ fi
 #     echo "Managed Identity:" $IDENTITY_NAME
 #     echo "Managed Identity ID: $IDENTITY_ID"
 # fi
-
 
