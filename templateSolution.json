@@ -21,7 +21,7 @@
       "metadata": {
         "description": "User Managed Identity Name"
       },
-      "defaultValue": "deployer-identity"
+      "defaultValue": "deployerIdentity"
     },
     "templateURL": {
       "type": "string",
