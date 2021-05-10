@@ -28,14 +28,18 @@ fi
 ###############################
 
 echo "================================================================================="
-echo "Deploying Edge Solution."
-echo "  - TEMPLATE_URL: " $TEMPLATE_URL
-echo "  - RESOURCEGROUP: " $RESOURCEGROUP
-echo "  - Location: " $Location
-echo "  - ADMIN_USER: " $ADMIN_USER
-echo "  - RAND: " $RAND
+echo ""
+echo -n "Deploying Edge Solution."
+echo -n "  - TEMPLATE_URL: " $TEMPLATE_URL
+echo -n "  - RESOURCEGROUP: " $RESOURCEGROUP
+echo -n "  - Location: " $Location
+echo -n "  - ADMIN_USER: " $ADMIN_USER
+echo -n "  - RAND: " $RAND
+$az group update -n $RESOURCEGROUP --tag currentStatus=executorStart > /dev/null 2>&1
 sleep 3
-wget $TEMPLATE_URL -O templateSpec.json > /dev/null 2>&1
+
+wget $TEMPLATE_URL -O templateSpec.json
+$az group update -n $RESOURCEGROUP --tag currentStatus=executorDownloaded > /dev/null 2>&1
 sleep 3
 
 $az deployment sub create --template-file azuredeploy.json  --no-wait \
@@ -45,5 +49,7 @@ $az deployment sub create --template-file azuredeploy.json  --no-wait \
   --parameters serverUserName=$ADMIN_USER \
   --parameters serverPassword=$ADMIN_PASSWORD \
   -ojsonc
-$az group update -n $RESOURCEGROUP --tag currentStatus=templateDeploy > /dev/null 2>&1
+$az group update -n $RESOURCEGROUP --tag currentStatus=executorCompleted > /dev/null 2>&1
+sleep 3
+
 echo "================================================================================="

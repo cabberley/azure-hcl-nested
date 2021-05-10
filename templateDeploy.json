@@ -36,7 +36,7 @@
     "storageAccountName": "[concat('edge', uniqueString(resourceGroup().id))]",
     "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
     "storageBlobContainerName": "config",
-    "userAssignedIdentityName": "edgeDeployer-identity",
+    "userAssignedIdentityName": "deployer-identity",
     "roleAssignmentName": "[guid(concat(resourceGroup().id, 'contributor'))]"
   },
   "functions": [],

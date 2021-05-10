@@ -21,7 +21,7 @@
       "metadata": {
         "description": "User Managed Identity Name"
       },
-      "defaultValue": "edgeDeployer-identity"
+      "defaultValue": "deployer-identity"
     },
     "templateURL": {
       "type": "string",
@@ -65,7 +65,7 @@
       "properties": {
         "forceUpdateTag": "[parameters('newGuid')]",
         "containerSettings": {
-          "containerGroupName": "solutionExecutor"
+          "containerGroupName": "executorContainer"
         },
         "AzCliVersion": "2.0.80",
         "environmentVariables": [
