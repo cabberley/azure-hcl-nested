@@ -42,7 +42,7 @@
       "type": "Microsoft.Resources/deploymentScripts",
       "apiVersion": "2020-10-01",
       "kind": "AzureCLI",
-      "name": "createResourceGroupScript",
+      "name": "createGroup.sh",
       "location": "[parameters('location')]",
       "identity": {
         "type": "UserAssigned",

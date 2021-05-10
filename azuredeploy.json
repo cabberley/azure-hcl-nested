@@ -106,7 +106,7 @@
       "type": "Microsoft.Resources/deploymentScripts",
       "apiVersion": "2020-10-01",
       "kind": "AzureCLI",
-      "name": "edgeUploadTemplate",
+      "name": "createTemplate.sh",
       "dependsOn": [ "[resourceId('Microsoft.Authorization/roleAssignments', variables('roleAssignmentName'))]" ],
       "location": "[resourceGroup().location]",
       "identity": {
