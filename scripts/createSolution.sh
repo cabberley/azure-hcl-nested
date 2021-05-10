@@ -43,7 +43,7 @@ if [ -f "$TEMPLATE" ]; then
     --parameters serverUserName=$ADMIN_USER \
     --parameters serverPassword=$ADMIN_PASSWORD)
   echo $result
-  echo $result | jq -c '{Result: map({id: .id})}' > $AZ_SCRIPTS_OUTPUT_PATH"
+  #echo $result | jq -c '{Result: map({id: .id})}' > $AZ_SCRIPTS_OUTPUT_PATH"
 
   $az group update -n $RESOURCEGROUP --tag currentStatus=executorTemplate:Submitted > /dev/null 2>&1
   sleep 30
