@@ -84,10 +84,6 @@
           {
             "name": "ADMIN_PASSWORD",
             "value": "[parameters('adminPassword')]"
-          },
-          {
-            "name": "IDENTITY_NAME",
-            "value": "[parameters('userIdentityName')]"
           }
         ],
         "arguments": "[parameters('templateURL')]",

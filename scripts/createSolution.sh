@@ -24,6 +24,8 @@ if [ -z "$RAND" ]; then
 fi
 
 TEMPLATE="azuredeploy.json"
+
+
 ###############################
 ## RESOURCE CREATION         ##
 ###############################
@@ -42,12 +44,10 @@ if [ -f "$TEMPLATE" ]; then
   $az deployment sub create --template-file $TEMPLATE \
     --location $Location \
     --parameters prefix=$RAND \
-    --parameters userIdentityName=$IDENTITY_NAME \
     --parameters serverUserName=$ADMIN_USER \
     --parameters serverPassword=$ADMIN_PASSWORD \
     -ojsonc > $AZ_SCRIPTS_OUTPUT_PATH
 
-  sleep 30
   $az group update -n $RESOURCEGROUP --tag currentStatus=executorTemplate:Submitted > /dev/null 2>&1
 
 else

@@ -11,13 +11,6 @@
       "maxLength": 5,
       "defaultValue": "demo"
     },
-    "newGuid": {
-      "type": "string",
-      "defaultValue": "[newGuid()]",
-      "metadata": {
-        "description": "forceUpdateTag property, used to force the execution of the script resource when no other properties have changed."
-      }
-    },
     "deployMock": {
       "type": "bool",
       "defaultValue": true
@@ -39,12 +32,6 @@
         "description": "URL Location on where to find the templates"
       },
       "defaultValue": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/master/templates/"
-    },
-    "userIdentityName": {
-      "type": "string",
-      "metadata": {
-        "description": "User Managed Identity Name"
-      }
     },
     "serverUserName": {
       "type": "string",
@@ -123,48 +110,16 @@
     "centralGroup": "[concat('edge-', parameters('prefix'), '-centralIT')]",
     "controlPlaneGroup": "[concat('edge-', parameters('prefix'), '-controlplane')]",
     "dataPlaneGroup": "[concat('edge-', parameters('prefix'), '-dataplane')]",
-    "dataPlaneGroupOnPrem": "[concat('edge-', parameters('prefix'), '-onprem-mock')]",
-    "localNetworkGatewayName": "local-gateway-azure-network",
-    "cliArg": "[concat('edge-', parameters('prefix'), '-principal')]"
+    "dataPlaneGroupOnPrem": "[concat('edge-', parameters('prefix'), '-onprem-mock')]"
   },
   "resources": [
     {
-      "type": "Microsoft.Resources/deploymentScripts",
-      "apiVersion": "2020-10-01",
-      "kind": "AzureCLI",
-      "name": "createGroups",
+      "comments": "## Central Resource Group (Required) ##",
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2020-06-01",
       "location": "[parameters('location')]",
-      "identity": {
-        "type": "UserAssigned",
-        "userAssignedIdentities": {
-          "[parameters('userIdentityName')]": {}
-        }
-      },
-      "properties": {
-        "forceUpdateTag": "[parameters('newGuid')]",
-        "containerSettings": {
-          "containerGroupName": "deploymentScripts"
-        },
-        "AzCliVersion": "2.0.80",
-        "environmentVariables": [
-          {
-            "name": "centralGroup",
-            "value": "[variables('centralGroup')]"
-          },
-          {
-            "name": "location",
-            "value": "[parameters('location')]"
-          }
-        ],
-        "arguments": "[variables('cliArg')]",
-        "scriptContent": "
-          az group create -g $centralGroup -l $location
-        ",
-        "supportingScriptUris": [],
-        "timeout": "PT30M",
-        "retentionInterval": "P1D",
-        "cleanupPreference": "OnSuccess"
-      }
+      "name": "[variables('centralGroup')]",
+      "properties": {}
     },
     {
       "comments": "## Lock Central IT Resource Group (Required) ##",
@@ -197,40 +152,6 @@
         }
       }
     },
-    {
-      "type": "Microsoft.Resources/deploymentScripts",
-      "apiVersion": "2020-10-01",
-      "kind": "AzureCLI",
-      "name": "testscript",
-      "location": "[parameters('location')]",
-      "identity": {
-        "type": "UserAssigned",
-        "userAssignedIdentities": {
-          "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userIdentityName'))]": {}
-        }
-      },
-      "properties": {
-        "forceUpdateTag": "[parameters('newGuid')]",
-        "containerSettings": {
-          "containerGroupName": "deploymentScripts"
-        },
-        "AzCliVersion": "2.0.80",
-        "environmentVariables": [
-
-        ],
-        "arguments": "[variables('cliArg')]",
-        "scriptContent": "
-          spInfo=$(az ad sp create-for-rbac -n $principalName --role contributor -o tsv)
-          echo $spInfo > $AZ_SCRIPTS_OUTPUT_PATH
-        ",
-        "supportingScriptUris": [],
-        "timeout": "PT30M",
-        "retentionInterval": "P1D",
-        "cleanupPreference": "OnSuccess"
-      }
-    },
-
-
     {
       "comments": "## Control Plane Resource Group (Required) ##",
       "type": "Microsoft.Resources/resourceGroups",

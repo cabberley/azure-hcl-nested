@@ -49,30 +49,20 @@ if [ ! "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/
 fi
 
 # Create Managed Identity
-managedIdentity="edge-${RAND}-identity"
+IDENTITY_NAME="edge-${RAND}-identity"
 echo "================================================================================================================="
 if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "groupCreated" ]; then
     # Deploy the user managed identity and update Status Tag
     echo "Creating a user managed identity."
-    clientId=$($az identity create -g $RESOURCEGROUP -n $managedIdentity --query clientId -o tsv 2>/dev/null)
+    clientId=$($az identity create -g $RESOURCEGROUP -n $IDENTITY_NAME --query clientId -o tsv 2>/dev/null)
     sleep 30
     $az role assignment create --role "Contributor" --scope "/subscriptions/$subId" --assignee $clientId > /dev/null 2>&1
     $az ad app permission add --id $clientId --api 00000002-0000-0000-c000-000000000000 --api-permissions 824c81eb-e3f8-4ee6-8f6d-de7f50d565b7=Role -o none 2>/dev/null
-    IDENTITY_ID=$($az identity list --query "[?name=='$managedIdentity'].id" -otsv)
+    IDENTITY_ID=$($az identity list --query "[?name=='$IDENTITY_NAME'].id" -otsv)
     $az group update -n $RESOURCEGROUP --tag currentStatus=identityCreated > /dev/null 2>&1
-    echo "Managed Identity:" $managedIdentity
+    echo "Managed Identity:" $IDENTITY_NAME
     echo "Managed Identity ID: $IDENTITY_ID"
 fi
-
-# if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "identityCreated" ]; then
-#   echo "================================================================================="
-#   echo -n "Creating the solution template"
-#   echo ""
-#   wget https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json -O templateSpec.json > /dev/null 2>&1
-#   sleep 3
-#   $az ts create --name "edgeSolution"  --resource-group $RESOURCEGROUP --location $LOCATION --version "1.0" --template-file "./templateSpec.json" -o none 2>/dev/null
-#   $az group update -n $RESOURCEGROUP --tag currentStatus=templateCreated > /dev/null 2>&1
-# fi
 
 echo "================================================================================="
 echo -n "Deploying Edge Solution..."
@@ -81,25 +71,13 @@ $az group update -n $RESOURCEGROUP --tag currentStatus=Deploy > /dev/null 2>&1
 $az deployment sub create --template-file azuredeploy.json  --no-wait \
   --location $LOCATION \
   --parameters prefix=$RAND \
-  --parameters userIdentityName=$IDENTITY_ID \
+  --parameters userIdentityId=$IDENTITY_ID \
   --parameters serverUserName=$ADMIN_USER \
   --parameters serverPassword=$ADMIN_PASSWORD \
   -ojsonc
 
 
 exit
-
-# # Create Storage Account
-# storageName="edge${RAND}storage"
-# fileShare="scripts"
-# if [ "$($az storage account check-name --name $storageName --query nameAvailable -o tsv 2>/dev/null)" = "true" ]; then
-#     echo "============================================================================================================="
-#     echo "Deploying the storage account."
-#     $az storage account create --name $storageName --resource-group $RESOURCEGROUP --location $LOCATION --sku Standard_LRS -o none 2>/dev/null
-#     $az storage share create --account-name $storageName --name $fileShare -o none 2>/dev/null
-#     $az group update -n $RESOURCEGROUP --tag currentStatus=storageCreated > /dev/null 2>&1
-#     echo "Storage Account: " $storageName
-# fi
 
 # echo "================================================================================================================="
 # if [ "$($az group show -n $RESOURCEGROUP --query tags.currentStatus -o tsv 2>/dev/null)" = "storageCreated" ]; then
