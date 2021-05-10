@@ -9,13 +9,6 @@
         "description": "Used to force the execution of the script resource when no other properties have changed."
       }
     },
-    "templateURL": {
-      "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/templateSolution.json",
-      "metadata": {
-        "description": "URL of the template to be uploaded."
-      }
-    },
     "accessLevel": {
       "type": "string",
       "allowedValues": [
@@ -85,7 +78,7 @@
             "value": "[resourceGroup().location]"
           }
         ],
-        "arguments": "[parameters('templateURL')]",
+        "arguments": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/templates/deployCentralResources.json",
         "primaryScriptUri": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/scripts/createTemplate.sh",
         "supportingScriptUris": [],
         "timeout": "PT30M",
