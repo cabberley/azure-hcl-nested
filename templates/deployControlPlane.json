@@ -89,53 +89,99 @@
         "enabledForTemplateDeployment": true,
         "enabledForVolumeEncryption": true
       },
-      "resources": []
-    },
-    {
-      "comments": "## Storage Account ##",
-      "apiVersion": "2021-01-01",
-      "type": "Microsoft.Storage/storageAccounts",
-      "name": "[variables('storageAccountName')]",
-      "location": "[resourceGroup().location]",
-      "sku": {
-        "name": "Standard_LRS",
-        "tier": "Standard"
-      },
-      "kind": "StorageV2",
-      "properties": {
-        "accessTier": "Hot",
-        "encryption": {
-          "keySource": "Microsoft.Storage",
-          "services": {
-            "blob": {
-              "enabled": true
-            }
-          }
-        },
-        "networkAcls": {
-          "bypass": "AzureServices",
-          "virtualNetworkRules": [],
-          "ipRules": [],
-          "defaultAction": "Deny"
-        },
-        "allowBlobPublicAccess": "[parameters('allowBlobPublicAccess')]"
-      },
       "resources": [
         {
-          "comments": "## Table Storage ##",
-          "apiVersion": "2019-06-01",
-          "type": "tableServices/tables",
-          "name": "[concat('default/', variables('storageTableName'))]",
+          "comments": "## Storage Account ##",
+          "apiVersion": "2021-01-01",
+          "type": "Microsoft.Storage/storageAccounts",
+          "name": "[variables('storageAccountName')]",
+          "location": "[resourceGroup().location]",
+          "sku": {
+            "name": "Standard_LRS",
+            "tier": "Standard"
+          },
+          "kind": "StorageV2",
+          "properties": {
+            "accessTier": "Hot",
+            "minimumTlsVersion": "TLS1_2",
+            "supportsHttpsTrafficOnly": true,
+            "encryption": {
+              "keySource": "Microsoft.Storage",
+              "services": {
+                "file": {
+                  "keyType": "Account",
+                  "enabled": true
+                },
+                "blob": {
+                  "keyType": "Account",
+                  "enabled": true
+                }
+              }
+            },
+            "networkAcls": {
+              "bypass": "AzureServices",
+              "virtualNetworkRules": [],
+              "ipRules": [],
+              "defaultAction": "Deny"
+            },
+            "allowBlobPublicAccess": "[parameters('allowBlobPublicAccess')]"
+          },
+          "resources": [
+            {
+              "comments": "## Table Storage ##",
+              "apiVersion": "2019-06-01",
+              "type": "tableServices/tables",
+              "name": "[concat('default/', variables('storageTableName'))]",
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+              ]
+            },
+            {
+              "comments": "## Blob Storage ##",
+              "type": "blobServices/containers",
+              "apiVersion": "2019-06-01",
+              "name": "[concat('default/', variables('storageContainerName'))]",
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+              ],
+              "properties": {
+                "changeFeed": {
+                  "enabled": true
+                },
+                "restorePolicy": {
+                  "enabled": true,
+                  "days": 6
+                },
+                "deleteRetentionPolicy": {
+                  "enabled": true,
+                  "days": 7
+                },
+                "isVersioningEnabled": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "secrets",
+          "name": "storageKey",
+          "apiVersion": "2019-09-01",
+          "properties": {
+            "value": "[listKeys(variables('storageId'), '2019-09-01').keys[0].value]"
+          },
           "dependsOn": [
+            "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
             "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
           ]
         },
         {
-          "comments": "## Blob Storage ##",
-          "type": "blobServices/containers",
-          "apiVersion": "2019-06-01",
-          "name": "[concat('default/', variables('storageContainerName'))]",
+          "type": "secrets",
+          "name": "storageAccount",
+          "apiVersion": "2019-09-01",
+          "properties": {
+            "value": "[variables('storageAccountName')]"
+          },
           "dependsOn": [
+            "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
             "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
           ]
         }
