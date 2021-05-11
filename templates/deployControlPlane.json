@@ -36,12 +36,12 @@
       "metadata": {
         "description": "Subnet Name"
       },
-      "defaultValue": "ControlPlaneSubnet"
+      "defaultValue": "ControlPlane-vnet-spoke"
     }
   },
   "variables": {
     "cleanUnique": "[toLower(replace(parameters('prefix'),'-', ''))]",
-    "vnetId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', parameters('vnetGroup'), '/providers/Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
+    "vnetId": "[concat(subscription().id, '/resourceGroups/', parameters('vnetGroup'), '/providers/Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
     "subnetId": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
     "keyVaultName": "[concat(variables('cleanUnique'), 'ctl', uniqueString(resourceGroup().id))]",
     "keyVaultId": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
