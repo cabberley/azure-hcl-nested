@@ -81,7 +81,13 @@
         "accessPolicies": [],
         "networkAcls": {
           "bypass": "AzureServices",
-          "virtualNetworkRules": [],
+          "virtualNetworkRules": [
+            {
+              "id": "[variables('subnetId')]",
+              "action": "Allow",
+              "state": "succeeded"
+            }
+          ],
           "ipRules": [],
           "defaultAction": "Deny"
         },
