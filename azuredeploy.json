@@ -267,11 +267,14 @@
           "prefix": {
             "value": "[parameters('prefix')]"
           },
+          "vnetGroup": {
+            "value": "[variables('operationsGroup')]"
+          },
           "vnetName": {
             "value": "[reference('TemplateOperations', '2020-06-01').outputs.hubNetwork.value.name]"
           },
-          "subnetId": {
-            "value": "[reference('TemplateOperations', '2020-06-01').outputs.controlPlaneNetwork.value.subnetId]"
+          "subnetName": {
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.controlPlaneNetwork.value.subnetName]"
           }
         }
       }
