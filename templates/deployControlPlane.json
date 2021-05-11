@@ -108,7 +108,7 @@
           "bypass": "AzureServices",
           "virtualNetworkRules": [],
           "ipRules": [],
-          "defaultAction": "Allow"
+          "defaultAction": "Deny"
         },
         "allowBlobPublicAccess": "[parameters('allowBlobPublicAccess')]"
       },
