@@ -40,7 +40,7 @@
     "storageAccountName": "[concat(variables('cleanUnique'), 'ctl', uniqueString(resourceGroup().id))]",
     "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
     "storageTableName": "PartitionInfo",
-    "storageContainerName": "Default",
+    "storageContainerName": "stuff",
     "tablePrivateEndpointName": "[concat(variables('storageAccountName'), '-table-endpoint')]",
     "tablePublicDNSZoneForwarder": "[concat('.table.', environment().suffixes.storage)]",
     "tablePrivateDnsZoneName": "[concat('privatelink', variables('tablePublicDNSZoneForwarder'))]",
