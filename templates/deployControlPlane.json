@@ -18,12 +18,11 @@
       },
       "defaultValue": true
     },
-    "vnetName": {
+    "vnetId": {
       "type": "string",
       "metadata": {
-        "description": "Virtual Network for Private IP Link"
-      },
-      "defaultValue": "Operations-vnet-hub"
+        "description": "Virtual Network ID for Private IP Link"
+      }
     },
     "subnetId": {
       "type": "string",
@@ -140,7 +139,7 @@
       "comments": "## Blob Storage Virtual Network Link ##",
       "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
       "apiVersion": "2018-09-01",
-      "name": "[concat(variables('blobPrivateDnsZoneName'), '/link_to_', toLower(parameters('vnetName')))]",
+      "name": "[concat(variables('blobPrivateDnsZoneName'), '/link_to_', toLower(parameters('vnetId')))]",
       "location": "global",
       "dependsOn": [
         "[variables('blobPrivateDnsZoneId')]"
@@ -148,7 +147,7 @@
       "properties": {
         "registrationEnabled": false,
         "virtualNetwork": {
-          "id": "[parameters('subnetId')]"
+          "id": "[parameters('vnetId')]"
         }
       }
     }
