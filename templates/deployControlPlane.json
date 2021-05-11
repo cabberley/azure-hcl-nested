@@ -22,21 +22,22 @@
       "type": "string",
       "metadata": {
         "description": "Resource Group of the Virtual Network"
-      }
+      },
+      "defaultValue": "edge-operations"
     },
     "vnetName": {
       "type": "string",
       "metadata": {
         "description": "Virtual Network Name"
       },
-      "defaultValue": "Operations-vnet-hub"
+      "defaultValue": "ControlPlane-vnet-spoke"
     },
     "subnetName": {
       "type": "string",
       "metadata": {
         "description": "Subnet Name"
       },
-      "defaultValue": "ControlPlane-vnet-spoke"
+      "defaultValue": "ControlPlaneSubnet"
     }
   },
   "variables": {
