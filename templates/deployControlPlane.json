@@ -91,7 +91,6 @@
     "vnetId": "[concat(subscription().id, '/resourceGroups/', parameters('vnetGroup'), '/providers/Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
     "subnetId": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
     "databaseAccountName": "[concat(variables('cleanUnique'), 'ctl', uniqueString(resourceGroup().id))]",
-    "dbName": "Entitlements",
     "consistencyPolicy": {
       "Eventual": {
         "defaultConsistencyLevel": "Eventual"
@@ -164,21 +163,8 @@
       }
     },
     {
-      "type": "Microsoft.DocumentDB/databaseAccounts/gremlinDatabases",
-      "name": "[concat(variables('dbName'), '/', variables('databaseAccountName'))]",
-      "apiVersion": "2021-01-15",
-      "dependsOn": [
-        "[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('databaseAccountName'))]"
-      ],
-      "properties": {
-        "resource": {
-          "id": "[variables('dbName')]"
-        }
-      }
-    },
-    {
       "comments": "## Storage Account ##",
-      "apiVersion": "2021-01-01",
+      "apiVersion": "2021-02-01",
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('storageAccountName')]",
       "location": "[resourceGroup().location]",
@@ -215,7 +201,7 @@
       "resources": [
         {
           "comments": "## Table Storage ##",
-          "apiVersion": "2019-06-01",
+          "apiVersion": "2021-02-01",
           "type": "tableServices/tables",
           "name": "[concat('default/', variables('storageTableName'))]",
           "dependsOn": [
@@ -225,7 +211,7 @@
         {
           "comments": "## Blob Storage ##",
           "type": "blobServices/containers",
-          "apiVersion": "2019-06-01",
+          "apiVersion": "2021-02-01",
           "name": "[concat('default/', variables('storageContainerName'))]",
           "dependsOn": [
             "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
@@ -262,13 +248,7 @@
         "accessPolicies": [],
         "networkAcls": {
           "bypass": "AzureServices",
-          "virtualNetworkRules": [
-            {
-              "id": "[variables('subnetId')]",
-              "action": "Allow",
-              "state": "succeeded"
-            }
-          ],
+          "virtualNetworkRules": [],
           "ipRules": [],
           "defaultAction": "Deny"
         },
