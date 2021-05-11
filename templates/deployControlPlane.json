@@ -164,7 +164,7 @@
     },
     {
       "comments": "## Storage Account ##",
-      "apiVersion": "2021-02-01",
+      "apiVersion": "2021-04-01",
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('storageAccountName')]",
       "location": "[resourceGroup().location]",
@@ -201,7 +201,7 @@
       "resources": [
         {
           "comments": "## Table Storage ##",
-          "apiVersion": "2021-02-01",
+          "apiVersion": "2021-04-01",
           "type": "tableServices/tables",
           "name": "[concat('default/', variables('storageTableName'))]",
           "dependsOn": [
@@ -211,7 +211,7 @@
         {
           "comments": "## Blob Storage ##",
           "type": "blobServices/containers",
-          "apiVersion": "2021-02-01",
+          "apiVersion": "2021-04-01",
           "name": "[concat('default/', variables('storageContainerName'))]",
           "dependsOn": [
             "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
