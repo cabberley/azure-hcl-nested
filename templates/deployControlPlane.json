@@ -10,17 +10,56 @@
       "minLength": 2,
       "maxLength": 5,
       "defaultValue": "demo"
+    },
+    "allowBlobPublicAccess": {
+      "type": "bool",
+      "metadata": {
+        "description": "Allow or disallow public access to all blobs or containers in the storage accounts. The default interpretation is true for this property."
+      },
+      "defaultValue": true
+    },
+    "vnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual Network for Private IP Link"
+      }
+    },
+    "subnetId": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet ID for Private IP Link"
+      }
     }
   },
   "variables": {
-    "KeyVaultName": "[concat(parameters('prefix'), '-cp-', uniqueString(resourceGroup().id))]",
-    "KeyVaultId": "[resourceId('Microsoft.KeyVault/vaults', variables('KeyVaultName'))]"
+    "cleanUnique": "[toLower(replace(parameters('prefix'),'-', ''))]",
+
+    "keyVaultName": "[concat(variables('cleanUnique'), 'ctl', uniqueString(resourceGroup().id))]",
+    "keyVaultId": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+    "storageAccountName": "[concat(variables('cleanUnique'), 'ctl', uniqueString(resourceGroup().id))]",
+    "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
+    "storageTableName": "PartitionInfo",
+    "storageContainerName": "Default",
+    "tablePrivateEndpointName": "[concat(variables('storageAccountName'), '-table-endpoint')]",
+    "tablePublicDNSZoneForwarder": "[concat('.table.', environment().suffixes.storage)]",
+    "tablePrivateDnsZoneName": "[concat('privatelink', variables('tablePublicDNSZoneForwarder'))]",
+    "tablePrivateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('tablePrivateDnsZoneName'))]",
+    "tableStorageAccountPrivateEndpointGroupName": "table",
+    "tablePrivateDnsZoneGroup": "[concat(variables('tablePrivateEndpointName'),'/', variables('tableStorageAccountPrivateEndpointGroupName'), 'PrivateDnsZoneGroup')]",
+    "tableStorageAccountPrivateEndpointId": "[resourceId('Microsoft.Network/privateEndpoints', variables('tablePrivateEndpointName'))]",
+    "blobPrivateEndpointName": "[concat(variables('storageAccountName'), '-blob-endpoint')]",
+    "blobPublicDNSZoneForwarder": "[concat('.blob.', environment().suffixes.storage)]",
+    "blobPrivateDnsZoneName": "[concat('privatelink', variables('blobPublicDNSZoneForwarder'))]",
+    "blobPrivateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('blobPrivateDnsZoneName'))]",
+    "blobStorageAccountPrivateEndpointGroupName": "blob",
+    "blobPrivateDnsZoneGroup": "[concat(variables('blobPrivateEndpointName'),'/', variables('blobStorageAccountPrivateEndpointGroupName'), 'PrivateDnsZoneGroup')]",
+    "blobStorageAccountPrivateEndpointId": "[resourceId('Microsoft.Network/privateEndpoints', variables('blobPrivateEndpointName'))]"
   },
   "resources": [
     {
       "comments": "## Key Vault ##",
       "type": "Microsoft.KeyVault/vaults",
-      "name": "[variables('KeyVaultName')]",
+      "name": "[variables('keyVaultName')]",
       "apiVersion": "2019-09-01",
       "location": "[resourceGroup().location]",
       "properties": {
@@ -41,13 +80,223 @@
         "enabledForVolumeEncryption": true
       },
       "resources": []
+    },
+    {
+      "comments": "## Storage Account ##",
+      "apiVersion": "2021-01-01",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "accessTier": "Hot",
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "virtualNetworkRules": [],
+          "ipRules": [],
+          "defaultAction": "Deny"
+        },
+        "allowBlobPublicAccess": "[parameters('allowBlobPublicAccess')]"
+      },
+      "resources": [
+        {
+          "comments": "## Table Storage ##",
+          "apiVersion": "2019-06-01",
+          "type": "tableServices/tables",
+          "name": "[concat('default/', variables('storageTableName'))]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+          ]
+        },
+        {
+          "comments": "## Blob Storage ##",
+          "type": "blobServices/containers",
+          "apiVersion": "2019-06-01",
+          "name": "[concat('default/', variables('storageContainerName'))]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+          ]
+        }
+      ]
+    },
+    {
+      "comments": "## Table Storage Private DNS Zone ##",
+      "type": "Microsoft.Network/privateDnsZones",
+      "apiVersion": "2018-09-01",
+      "name": "[variables('tablePrivateDnsZoneName')]",
+      "location": "global",
+      "properties": {
+        "maxNumberOfRecordSets": 25000,
+        "maxNumberOfVirtualNetworkLinks": 1000,
+        "maxNumberOfVirtualNetworkLinksWithRegistration": 100
+      }
+    },
+    {
+      "comments": "## Table Storage Virtual Network Link ##",
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "apiVersion": "2018-09-01",
+      "name": "[concat(variables('tablePrivateDnsZoneName'), '/link_to_', toLower(parameters('vnetName')))]",
+      "location": "global",
+      "dependsOn": [
+        "[variables('tablePrivateDnsZoneId')]"
+      ],
+      "properties": {
+        "registrationEnabled": false,
+        "virtualNetwork": {
+          "id": "[parameters('subnetId')]"
+        }
+      }
+    },
+    {
+      "comments": "## Table Storage Private Endpoint ##",
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "2020-04-01",
+      "name": "[variables('tablePrivateEndpointName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('storageId')]"
+      ],
+      "properties": {
+        "privateLinkServiceConnections": [
+          {
+            "name": "[variables('tablePrivateEndpointName')]",
+            "properties": {
+              "privateLinkServiceId": "[variables('storageId')]",
+              "groupIds": [
+                "[variables('tableStorageAccountPrivateEndpointGroupName')]"
+              ]
+            }
+          }
+        ],
+        "subnet": {
+          "id": "[parameters('subnetId')]"
+        },
+        "customDnsConfigs": [
+          {
+            "fqdn": "[concat(variables('storageAccountName'), variables('tablePublicDNSZoneForwarder'))]"
+          }
+        ]
+      }
+    },
+    {
+      "comments": "## Table Storage Private DNS Zone Group ##",
+      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+      "apiVersion": "2020-03-01",
+      "name": "[variables('tablePrivateDnsZoneGroup')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('tablePrivateDnsZoneId')]",
+        "[variables('tableStorageAccountPrivateEndpointId')]"
+      ],
+      "properties": {
+        "privateDnsZoneConfigs": [
+          {
+            "name": "dnsConfig",
+            "properties": {
+              "privateDnsZoneId": "[variables('tablePrivateDnsZoneId')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "comments": "## Blob Storage Private DNS Zone ##",
+      "type": "Microsoft.Network/privateDnsZones",
+      "apiVersion": "2018-09-01",
+      "name": "[variables('blobPrivateDnsZoneName')]",
+      "location": "global",
+      "properties": {
+        "maxNumberOfRecordSets": 25000,
+        "maxNumberOfVirtualNetworkLinks": 1000,
+        "maxNumberOfVirtualNetworkLinksWithRegistration": 100
+      }
+    },
+    {
+      "comments": "## Blob Storage Virtual Network Link ##",
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "apiVersion": "2018-09-01",
+      "name": "[concat(variables('blobPrivateDnsZoneName'), '/link_to_', toLower(parameters('vnetName')))]",
+      "location": "global",
+      "dependsOn": [
+        "[variables('blobPrivateDnsZoneId')]"
+      ],
+      "properties": {
+        "registrationEnabled": false,
+        "virtualNetwork": {
+          "id": "[parameters('subnetId')]"
+        }
+      }
+    },
+    {
+      "comments": "## Blob Storage Private Endpoint ##",
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "2020-04-01",
+      "name": "[variables('blobPrivateEndpointName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('storageId')]"
+      ],
+      "properties": {
+        "privateLinkServiceConnections": [
+          {
+            "name": "[variables('blobPrivateEndpointName')]",
+            "properties": {
+              "privateLinkServiceId": "[variables('storageId')]",
+              "groupIds": [
+                "[variables('blobStorageAccountPrivateEndpointGroupName')]"
+              ]
+            }
+          }
+        ],
+        "subnet": {
+          "id": "[parameters('subnetId')]"
+        },
+        "customDnsConfigs": [
+          {
+            "fqdn": "[concat(variables('storageAccountName'), variables('blobPublicDNSZoneForwarder'))]"
+          }
+        ]
+      }
+    },
+    {
+      "comments": "## Blob Storage Private DNS Zone Group ##",
+      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+      "apiVersion": "2020-03-01",
+      "name": "[variables('blobPrivateDnsZoneGroup')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('blobPrivateDnsZoneId')]",
+        "[variables('blobStorageAccountPrivateEndpointId')]"
+      ],
+      "properties": {
+        "privateDnsZoneConfigs": [
+          {
+            "name": "dnsConfig",
+            "properties": {
+              "privateDnsZoneId": "[variables('blobPrivateDnsZoneId')]"
+            }
+          }
+        ]
+      }
     }
   ],
   "outputs": {
     "keyVault": {
       "type": "object",
       "value": {
-        "id": "[variables('KeyVaultId')]"
+        "id": "[variables('keyVaultId')]"
+      }
+    },
+    "storageAccount": {
+      "type": "object",
+      "value": {
+        "id": "[variables('storageId')]",
+        "tablePrivateEndpointId": "[reference(resourceId('Microsoft.Network/privateEndpoints', variables('tablePrivateEndpointName')), '2020-04-01', 'Full')]",
+        "blobPrivateEndpointId": "[reference(resourceId('Microsoft.Network/privateEndpoints', variables('blobPrivateEndpointName')), '2020-04-01', 'Full')]"
       }
     }
   }

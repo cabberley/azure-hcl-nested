@@ -266,6 +266,12 @@
         "parameters": {
           "prefix": {
             "value": "[parameters('prefix')]"
+          },
+          "vnetName": {
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.hubNetwork.value.name]"
+          },
+          "subnetId": {
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.controlPlaneNetwork.value.subnetId]"
           }
         }
       }
