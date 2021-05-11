@@ -104,6 +104,14 @@
       "kind": "StorageV2",
       "properties": {
         "accessTier": "Hot",
+        "encryption": {
+          "keySource": "Microsoft.Storage",
+          "services": {
+            "blob": {
+              "enabled": true
+            }
+          }
+        },
         "networkAcls": {
           "bypass": "AzureServices",
           "virtualNetworkRules": [],
