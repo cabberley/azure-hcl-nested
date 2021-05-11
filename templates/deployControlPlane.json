@@ -38,12 +38,91 @@
         "description": "Subnet Name"
       },
       "defaultValue": "ControlPlaneSubnet"
+    },
+    "primaryRegion": {
+      "type": "string",
+      "metadata": {
+        "description": "The primary replica region for the Cosmos DB account."
+      },
+      "defaultValue": "eastus"
+    },
+    "secondaryRegion": {
+      "type": "string",
+      "metadata": {
+        "description": "The secondary replica region for the Cosmos DB account."
+      },
+      "defaultValue": "centralus"
+    },
+    "maxStalenessPrefix": {
+      "type": "int",
+      "defaultValue": 100000,
+      "minValue": 10,
+      "maxValue": 2147483647,
+      "metadata": {
+        "description": "Max stale requests. Required for BoundedStaleness. Valid ranges, Single Region: 10 to 1000000. Multi Region: 100000 to 1000000."
+      }
+    },
+    "maxIntervalInSeconds": {
+      "type": "int",
+      "defaultValue": 300,
+      "minValue": 5,
+      "maxValue": 86400,
+      "metadata": {
+        "description": "Max lag time (seconds). Required for BoundedStaleness. Valid ranges, Single Region: 5 to 84600. Multi Region: 300 to 86400."
+      }
+    },
+    "defaultConsistencyLevel": {
+      "type": "string",
+      "defaultValue": "Session",
+      "allowedValues": [
+        "Eventual",
+        "ConsistentPrefix",
+        "Session",
+        "BoundedStaleness",
+        "Strong"
+      ],
+      "metadata": {
+        "description": "The default consistency level of the Cosmos DB account."
+      }
     }
   },
   "variables": {
     "cleanUnique": "[toLower(replace(parameters('prefix'),'-', ''))]",
     "vnetId": "[concat(subscription().id, '/resourceGroups/', parameters('vnetGroup'), '/providers/Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
     "subnetId": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
+    "databaseAccountName": "[concat(variables('cleanUnique'), 'ctl', uniqueString(resourceGroup().id))]",
+    "dbName": "Entitlements",
+    "consistencyPolicy": {
+      "Eventual": {
+        "defaultConsistencyLevel": "Eventual"
+      },
+      "ConsistentPrefix": {
+        "defaultConsistencyLevel": "ConsistentPrefix"
+      },
+      "Session": {
+        "defaultConsistencyLevel": "Session"
+      },
+      "BoundedStaleness": {
+        "defaultConsistencyLevel": "BoundedStaleness",
+        "maxStalenessPrefix": "[parameters('maxStalenessPrefix')]",
+        "maxIntervalInSeconds": "[parameters('maxIntervalInSeconds')]"
+      },
+      "Strong": {
+        "defaultConsistencyLevel": "Strong"
+      }
+    },
+    "locations": [
+      {
+        "locationName": "[parameters('primaryRegion')]",
+        "failoverPriority": 0,
+        "isZoneRedundant": false
+      },
+      {
+        "locationName": "[parameters('secondaryRegion')]",
+        "failoverPriority": 1,
+        "isZoneRedundant": false
+      }
+    ],
     "keyVaultName": "[concat(variables('cleanUnique'), 'ctl', uniqueString(resourceGroup().id))]",
     "keyVaultId": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
     "storageAccountName": "[concat(variables('cleanUnique'), 'ctl', uniqueString(resourceGroup().id))]",
@@ -66,6 +145,108 @@
     "blobStorageAccountPrivateEndpointId": "[resourceId('Microsoft.Network/privateEndpoints', variables('blobPrivateEndpointName'))]"
   },
   "resources": [
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "name": "[variables('databaseAccountName')]",
+      "apiVersion": "2021-01-15",
+      "location": "[resourceGroup().location]",
+      "kind": "GlobalDocumentDB",
+      "properties": {
+        "capabilities": [
+          {
+            "name": "EnableGremlin"
+          }
+        ],
+        "consistencyPolicy": "[variables('consistencyPolicy')[parameters('defaultConsistencyLevel')]]",
+        "locations": "[variables('locations')]",
+        "databaseAccountOfferType": "Standard",
+        "enableAutomaticFailover": false
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/gremlinDatabases",
+      "name": "[concat(variables('dbName'), '/', variables('databaseAccountName'))]",
+      "apiVersion": "2021-01-15",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('databaseAccountName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "[variables('dbName')]"
+        }
+      }
+    },
+    {
+      "comments": "## Storage Account ##",
+      "apiVersion": "2021-01-01",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "accessTier": "Hot",
+        "minimumTlsVersion": "TLS1_2",
+        "supportsHttpsTrafficOnly": true,
+        "encryption": {
+          "keySource": "Microsoft.Storage",
+          "services": {
+            "file": {
+              "keyType": "Account",
+              "enabled": true
+            },
+            "blob": {
+              "keyType": "Account",
+              "enabled": true
+            }
+          }
+        },
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "virtualNetworkRules": [],
+          "ipRules": [],
+          "defaultAction": "Deny"
+        },
+        "allowBlobPublicAccess": "[parameters('allowBlobPublicAccess')]"
+      },
+      "resources": [
+        {
+          "comments": "## Table Storage ##",
+          "apiVersion": "2019-06-01",
+          "type": "tableServices/tables",
+          "name": "[concat('default/', variables('storageTableName'))]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+          ]
+        },
+        {
+          "comments": "## Blob Storage ##",
+          "type": "blobServices/containers",
+          "apiVersion": "2019-06-01",
+          "name": "[concat('default/', variables('storageContainerName'))]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+          ],
+          "properties": {
+            "changeFeed": {
+              "enabled": true
+            },
+            "restorePolicy": {
+              "enabled": true,
+              "days": 6
+            },
+            "deleteRetentionPolicy": {
+              "enabled": true,
+              "days": 7
+            },
+            "isVersioningEnabled": true
+          }
+        }
+      ]
+    },
     {
       "comments": "## Key Vault ##",
       "type": "Microsoft.KeyVault/vaults",
@@ -96,77 +277,6 @@
         "enabledForVolumeEncryption": true
       },
       "resources": [
-        {
-          "comments": "## Storage Account ##",
-          "apiVersion": "2021-01-01",
-          "type": "Microsoft.Storage/storageAccounts",
-          "name": "[variables('storageAccountName')]",
-          "location": "[resourceGroup().location]",
-          "sku": {
-            "name": "Standard_LRS",
-            "tier": "Standard"
-          },
-          "kind": "StorageV2",
-          "properties": {
-            "accessTier": "Hot",
-            "minimumTlsVersion": "TLS1_2",
-            "supportsHttpsTrafficOnly": true,
-            "encryption": {
-              "keySource": "Microsoft.Storage",
-              "services": {
-                "file": {
-                  "keyType": "Account",
-                  "enabled": true
-                },
-                "blob": {
-                  "keyType": "Account",
-                  "enabled": true
-                }
-              }
-            },
-            "networkAcls": {
-              "bypass": "AzureServices",
-              "virtualNetworkRules": [],
-              "ipRules": [],
-              "defaultAction": "Deny"
-            },
-            "allowBlobPublicAccess": "[parameters('allowBlobPublicAccess')]"
-          },
-          "resources": [
-            {
-              "comments": "## Table Storage ##",
-              "apiVersion": "2019-06-01",
-              "type": "tableServices/tables",
-              "name": "[concat('default/', variables('storageTableName'))]",
-              "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
-              ]
-            },
-            {
-              "comments": "## Blob Storage ##",
-              "type": "blobServices/containers",
-              "apiVersion": "2019-06-01",
-              "name": "[concat('default/', variables('storageContainerName'))]",
-              "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
-              ],
-              "properties": {
-                "changeFeed": {
-                  "enabled": true
-                },
-                "restorePolicy": {
-                  "enabled": true,
-                  "days": 6
-                },
-                "deleteRetentionPolicy": {
-                  "enabled": true,
-                  "days": 7
-                },
-                "isVersioningEnabled": true
-              }
-            }
-          ]
-        },
         {
           "type": "secrets",
           "name": "storageKey",
