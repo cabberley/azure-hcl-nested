@@ -18,22 +18,31 @@
       },
       "defaultValue": true
     },
-    "vnetId": {
+    "vnetGroup": {
       "type": "string",
       "metadata": {
-        "description": "Virtual Network ID for Private IP Link"
+        "description": "Resource Group of the Virtual Network"
       }
     },
-    "subnetId": {
+    "vnetName": {
       "type": "string",
       "metadata": {
-        "description": "Subnet ID for Private IP Link"
-      }
+        "description": "Virtual Network Name"
+      },
+      "defaultValue": "Operations-vnet-hub"
+    },
+    "subnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Name"
+      },
+      "defaultValue": "ControlPlaneSubnet"
     }
   },
   "variables": {
     "cleanUnique": "[toLower(replace(parameters('prefix'),'-', ''))]",
-
+    "vnetId": "[concat('/subscriptions/', subscription().id, '/resourceGroups/', parameters('vnetGroup'), '/providers/Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
+    "subnetId": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
     "keyVaultName": "[concat(variables('cleanUnique'), 'ctl', uniqueString(resourceGroup().id))]",
     "keyVaultId": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
     "storageAccountName": "[concat(variables('cleanUnique'), 'ctl', uniqueString(resourceGroup().id))]",
@@ -139,7 +148,7 @@
       "comments": "## Blob Storage Virtual Network Link ##",
       "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
       "apiVersion": "2018-09-01",
-      "name": "[concat(variables('blobPrivateDnsZoneName'), '/link_to_', toLower(parameters('vnetId')))]",
+      "name": "[concat(variables('blobPrivateDnsZoneName'), '/link_to_', toLower(parameters('vnetName')))]",
       "location": "global",
       "dependsOn": [
         "[variables('blobPrivateDnsZoneId')]"
@@ -147,7 +156,7 @@
       "properties": {
         "registrationEnabled": false,
         "virtualNetwork": {
-          "id": "[parameters('vnetId')]"
+          "id": "[variables('vnetId')]"
         }
       }
     }
