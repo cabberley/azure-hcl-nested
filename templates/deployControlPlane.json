@@ -39,6 +39,10 @@
       },
       "defaultValue": "ControlPlaneSubnet"
     },
+    "deployDatabase": {
+      "type": "bool",
+      "defaultValue": false
+    },
     "primaryRegion": {
       "type": "string",
       "metadata": {
@@ -145,7 +149,9 @@
   },
   "resources": [
     {
+      "comments": "## Database Account ##",
       "type": "Microsoft.DocumentDB/databaseAccounts",
+      "condition": "[parameters('deployDatabase')]",
       "name": "[variables('databaseAccountName')]",
       "apiVersion": "2021-01-15",
       "location": "[resourceGroup().location]",
