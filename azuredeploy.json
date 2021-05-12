@@ -15,10 +15,6 @@
       "type": "bool",
       "defaultValue": true
     },
-    "deployDataPlane": {
-      "type": "bool",
-      "defaultValue": true
-    },
     "location": {
       "type": "string",
       "metadata": {
@@ -214,7 +210,7 @@
       }
     },
     {
-      "comments": "## On-Prem Resources Deployment Template ##",
+      "comments": "## On-Prem Mock Deployment Template ##",
       "name": "TemplateMockOnPrem",
       "condition": "[parameters('deployMock')]",
       "type": "Microsoft.Resources/deployments",

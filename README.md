@@ -13,7 +13,7 @@ This method of deployment hosts the templates in Azure and then allow for repeat
 
 __Operations Template__
 
-This template is designed to setup what would be assume to be the items owned by an enterprise operations team as part of a Cloud Adoption Framework.
+This template is designed to setup what would be assume to exist or be managed in an alternate form such as an enterprise team utilizing components from the Cloud Adoption Framework.  
 
 - Log Analytics Workspace
 - Network Topology Items
@@ -43,7 +43,7 @@ These 2 templates establish the VPN connections between the Hub Network and Mock
 
 _Option 2_
 
-This deployment uses Azure Cloud Shell to provision a full deployment automatically.
+This deployment uses Azure Cloud Shell to provision a full deployment automatically with a randomizer pattern.
 
 Run the following script from azure cloud shell.
 
