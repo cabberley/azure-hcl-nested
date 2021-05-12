@@ -60,6 +60,5 @@ wget -O - https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/s
 This architecture is a demo to play with hybrid concepts of a cloud control plane with an on-prem data plane.
 
 ![[0]][0]
-_Architecture Diagram_
 
 [0]: ./images/Architecture.png "Architecture Diagram"
