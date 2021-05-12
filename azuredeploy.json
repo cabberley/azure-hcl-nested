@@ -165,6 +165,7 @@
       "properties": {}
     },
     {
+      "comments": "## On Prem Mock Resource Group (Required) ##",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
       "name": "[concat('lock-', variables('dataPlaneGroupOnPrem'))]",
@@ -267,7 +268,7 @@
             "value": "[variables('operationsGroup')]"
           },
           "vnetName": {
-            "value": "[reference('TemplateOperations', '2020-06-01').outputs.hubNetwork.value.name]"
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.controlPlaneNetwork.value.name]"
           },
           "subnetName": {
             "value": "[reference('TemplateOperations', '2020-06-01').outputs.controlPlaneNetwork.value.subnetName]"
