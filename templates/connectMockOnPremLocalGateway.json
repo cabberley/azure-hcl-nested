@@ -7,16 +7,31 @@
       "defaultValue": "mock-prem-to-hub"
     },
     "azureCloudVnetPrefix": {
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "Operations Hub Network Segment"
+      },
+      "defaultValue": "10.0.0.0/20"
     },
     "spokeNetworkAddressPrefix": {
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "Spoke Network Segment"
+      },
+      "defaultValue": "10.100.0.0/16"
     },
     "gatewayIpAddress": {
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "Operations VPN Gateway IP Address"
+      }
     },
     "mocOnpremGatewayName": {
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "On-Prem VPN Gateway Name"
+      },
+      "defaultValue": "onprem-vpn-gateway"
     },
     "localNetworkGateway": {
       "type": "string",

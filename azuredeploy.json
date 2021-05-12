@@ -326,7 +326,7 @@
             "value": "[reference('TemplateOperations', '2020-06-01').outputs.vpnIp.value]"
           },
           "azureCloudVnetPrefix": {
-            "value": "[reference('TemplateOperations', '2020-06-01').outputs.mocOnpremNetwork.value]"
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.hubNetworkAddressPrefix.value]"
           },
           "spokeNetworkAddressPrefix": {
             "value": "[reference('TemplateOperations', '2020-06-01').outputs.spokeNetworkAddressPrefix.value]"

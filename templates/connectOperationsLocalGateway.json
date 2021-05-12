@@ -7,13 +7,24 @@
       "defaultValue": "hub-to-mock-prem"
     },
     "gatewayIpAddress": {
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "On-Prem VPN Gateway IP Address"
+      }
     },
     "azureCloudVnetPrefix": {
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "On-Prem Network Segment"
+      },
+      "defaultValue": "192.168.0.0/16"
     },
     "azureNetworkGatewayName": {
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "Operations VPN Gateway Name"
+      },
+      "defaultValue": "gateway-vgw"
     },
     "localNetworkGatewayName": {
       "type": "string",
