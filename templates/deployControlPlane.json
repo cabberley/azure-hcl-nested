@@ -38,6 +38,33 @@
         "description": "Subnet Name"
       },
       "defaultValue": "ControlPlaneSubnet"
+    },
+    "dbReplicaRegion": {
+      "type": "string",
+      "metadata": {
+        "description": "The replica region for the Cosmos DB account."
+      },
+      "defaultValue": "westus"
+    },
+    "dbAutomaticFailover": {
+      "type": "bool",
+      "metadata": {
+        "description": "Enable automatic failover for regions"
+      },
+      "allowedValues": [
+        true,
+        false
+      ],
+      "defaultValue": true
+    },
+    "dbAutoscaleMaxThroughput": {
+      "type": "int",
+      "metadata": {
+        "description": "Maximum autoscale throughput for the graph"
+      },
+      "minValue": 4000,
+      "maxValue": 1000000,
+      "defaultValue": 4000
     }
   },
   "variables": {
@@ -46,10 +73,13 @@
     "subnetId": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
     "keyVaultName": "[concat(variables('cleanUnique'), 'ctl', uniqueString(resourceGroup().id))]",
     "keyVaultId": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+    "databaseAccountName": "[concat(variables('cleanUnique'), 'ctl', uniqueString(resourceGroup().id))]",
+    "databaseName": "edge-graph",
+    "graphName": "entitlements",
     "storageAccountName": "[concat(variables('cleanUnique'), 'ctl', uniqueString(resourceGroup().id))]",
     "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
-    "storageTableName": "PartitionInfo",
-    "storageContainerName": "stuff",
+    "storageTableName": "partition",
+    "storageContainerName": "data",
     "tablePrivateEndpointName": "[concat(variables('storageAccountName'), '-table-endpoint')]",
     "tablePublicDNSZoneForwarder": "[concat('.table.', environment().suffixes.storage)]",
     "tablePrivateDnsZoneName": "[concat('privatelink', variables('tablePublicDNSZoneForwarder'))]",
@@ -63,7 +93,14 @@
     "blobPrivateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('blobPrivateDnsZoneName'))]",
     "blobStorageAccountPrivateEndpointGroupName": "blob",
     "blobPrivateDnsZoneGroup": "[concat(variables('blobPrivateEndpointName'),'/', variables('blobStorageAccountPrivateEndpointGroupName'), 'PrivateDnsZoneGroup')]",
-    "blobStorageAccountPrivateEndpointId": "[resourceId('Microsoft.Network/privateEndpoints', variables('blobPrivateEndpointName'))]"
+    "blobStorageAccountPrivateEndpointId": "[resourceId('Microsoft.Network/privateEndpoints', variables('blobPrivateEndpointName'))]",
+    "locations": [
+      {
+        "locationName": "[parameters('dbReplicaRegion')]",
+        "failoverPriority": 0,
+        "isZoneRedundant": false
+      }
+    ]
   },
   "resources": [
     {
@@ -92,6 +129,79 @@
       "resources": []
     },
     {
+      "comments": "## Gremlin Database ##",
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "name": "[variables('databaseAccountName')]",
+      "apiVersion": "2021-01-15",
+      "location": "[resourceGroup().location]",
+      "kind": "GlobalDocumentDB",
+      "properties": {
+        "capabilities": [
+          {
+            "name": "EnableGremlin"
+          }
+        ],
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "Session",
+          "maxIntervalInSeconds": 5,
+          "maxStalenessPrefix": 100
+        },
+        "locations": "[variables('locations')]",
+        "databaseAccountOfferType": "Standard",
+        "enableAutomaticFailover": "[parameters('dbAutomaticFailover')]"
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/gremlinDatabases",
+      "name": "[variables('databaseName')]",
+      "apiVersion": "2021-01-15",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('databaseAccountName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "[variables('databaseName')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDb/databaseAccounts/gremlinDatabases/graphs",
+      "name": "[concat(variables('databaseAccountName'), '/', variables('databaseName'), '/', variables('graphName'))]",
+      "apiVersion": "2021-01-15",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/gremlinDatabases', variables('databaseAccountName'),  variables('databaseName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "[variables('graphName')]",
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/myPathToNotIndex/*"
+              }
+            ]
+          },
+          "partitionKey": {
+            "paths": [
+              "/myPartitionKey"
+            ],
+            "kind": "Hash"
+          }
+        },
+        "options": {
+          "autoscaleSettings": {
+            "maxThroughput": "[parameters('dbAutoscaleMaxThroughput')]"
+          }
+        }
+      }
+    },
+    {
       "comments": "## Storage Account ##",
       "apiVersion": "2021-01-01",
       "type": "Microsoft.Storage/storageAccounts",
@@ -104,6 +214,9 @@
       "kind": "StorageV2",
       "properties": {
         "accessTier": "Hot",
+        "supportsHttpsTrafficOnly": true,
+        "minimumTlsVersion": "TLS1_2",
+        "allowBlobPublicAccess": "[parameters('allowBlobPublicAccess')]",
         "encryption": {
           "keySource": "Microsoft.Storage",
           "services": {
@@ -117,8 +230,7 @@
           "virtualNetworkRules": [],
           "ipRules": [],
           "defaultAction": "Deny"
-        },
-        "allowBlobPublicAccess": "[parameters('allowBlobPublicAccess')]"
+        }
       },
       "resources": [
         {
