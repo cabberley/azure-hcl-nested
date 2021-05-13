@@ -22,17 +22,38 @@
         "Premium_LRS"
       ]
     },
-    "subnet": {
+    "allowBlobPublicAccess": {
+      "type": "bool",
+      "metadata": {
+        "description": "Allow or disallow public access to all blobs or containers in the storage accounts. The default interpretation is true for this property."
+      },
+      "defaultValue": true
+    },
+    "vnetGroup": {
       "type": "string",
       "metadata": {
-        "description": "Subnet to restrict Storage Account Access to"
-      }
+        "description": "Resource Group of the Virtual Network"
+      },
+      "defaultValue": "edge-operations"
+    },
+    "vnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual Network Name"
+      },
+      "defaultValue": "DataPlane-vnet-spoke"
+    },
+    "subnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Name"
+      },
+      "defaultValue": "DataPlaneSubnet"
     }
   },
   "variables": {
     "storageAccountName": "[concat(parameters('prefix'), uniqueString(resourceGroup().id), '2')]",
-    "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
-    "privateEndpointName": "dataplanPrivateEndpoint"
+    "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
   },
   "resources": [
     {
@@ -66,31 +87,6 @@
         }
       }
     }
-    // {
-    //   "type": "Microsoft.Network/privateEndpoints",
-    //   "apiVersion": "2020-06-01",
-    //   "name": "[variables('privateEndpointName')]",
-    //   "location": "[resourceGroup().location]",
-    //   "dependsOn": [
-    //     "[variables('storageAccountName')]"
-    //   ],
-    //   "properties": {
-    //     "subnet": {
-    //       "id": "[parameters('subnet')]"
-    //     },
-    //     "privateLinkServiceConnections": [
-    //       {
-    //         "name": "[variables('privateEndpointName')]",
-    //         "properties": {
-    //           "privateLinkServiceId": "[variables('storageId')]",
-    //           "groupIds": [
-    //             "storageAccounts"
-    //           ]
-    //         }
-    //       }
-    //     ]
-    //   }
-    // }
   ],
   "outputs": {
     "storageAccount": {

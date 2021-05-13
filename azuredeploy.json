@@ -112,7 +112,8 @@
   "variables": {
     "operationsGroup": "[concat('edge-', parameters('prefix'), '-operations')]",
     "controlPlaneGroup": "[concat('edge-', parameters('prefix'), '-controlplane')]",
-    "dataPlaneGroupOnPrem": "[concat('edge-', parameters('prefix'), '-onprem-mock')]"
+    "dataPlaneGroup": "[concat('edge-', parameters('prefix'), '-controlplane')]",
+    "mockPremGroup": "[concat('edge-', parameters('prefix'), '-onprem-mock')]"
   },
   "resources": [
     {
@@ -163,22 +164,89 @@
       "properties": {}
     },
     {
+      "comments": "## Lock Control Plane Resource Group (Required) ##",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "[concat('lock-', variables('controlPlaneGroup'))]",
+      "resourceGroup": "[variables('controlPlaneGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('controlPlaneGroup'))]"
+      ],
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "outer"
+        },
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/locks",
+              "apiVersion": "2017-04-01",
+              "name": "DontDelete",
+              "properties": {
+                "level": "CanNotDelete",
+                "notes": "Prevent deletion of the resourceGroup"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "comments": "## Data Plane Resource Group (Optional) ##",
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2021-04-01",
+      "location": "[parameters('location')]",
+      "name": "[variables('dataPlaneGroup')]",
+      "properties": {}
+    },
+    {
+      "comments": "## Lock Data Plane Resource Group (Required) ##",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "[concat('lock-', variables('dataPlaneGroup'))]",
+      "resourceGroup": "[variables('dataPlaneGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroup'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/locks",
+              "apiVersion": "2017-04-01",
+              "name": "DontDelete",
+              "properties": {
+                "level": "CanNotDelete",
+                "notes": "Prevent deletion of the resourceGroup"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
       "comments": "## On-Prem Resource Group (Optional) ##",
       "condition": "[parameters('deployMock')]",
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2021-04-01",
       "location": "[parameters('location')]",
-      "name": "[variables('dataPlaneGroupOnPrem')]",
+      "name": "[variables('mockPremGroup')]",
       "properties": {}
     },
     {
       "comments": "## On Prem Mock Resource Group (Required) ##",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
-      "name": "[concat('lock-', variables('dataPlaneGroupOnPrem'))]",
-      "resourceGroup": "[variables('dataPlaneGroupOnPrem')]",
+      "name": "[concat('lock-', variables('mockPremGroup'))]",
+      "resourceGroup": "[variables('mockPremGroup')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroupOnPrem'))]"
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('mockPremGroup'))]"
       ],
       "properties": {
         "mode": "Incremental",
@@ -223,9 +291,9 @@
       "condition": "[parameters('deployMock')]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-06-01",
-      "resourceGroup": "[variables('dataPlaneGroupOnPrem')]",
+      "resourceGroup": "[variables('mockPremGroup')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroupOnPrem'))]"
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('mockPremGroup'))]"
       ],
       "properties": {
         "mode": "Incremental",
@@ -287,6 +355,37 @@
       }
     },
     {
+      "comments": "## Data Plane Resources Deployment Template ##",
+      "name": "TemplateDataPlane",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('dataPlaneGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroup'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployDataPlane.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          },
+          "vnetGroup": {
+            "value": "[variables('operationsGroup')]"
+          },
+          "vnetName": {
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.dataPlaneNetwork.value.name]"
+          },
+          "subnetName": {
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.dataPlaneNetwork.value.subnetName]"
+          }
+        }
+      }
+    },
+    {
       "comments": "## Operations VPN Gateway Connect Template ##",
       "name": "TemplateOperationsLocalGateway",
       "type": "Microsoft.Resources/deployments",
@@ -320,7 +419,7 @@
       "name": "TemplateMockOnPremLocalGateway",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-06-01",
-      "resourceGroup": "[variables('dataPlaneGroupOnPrem')]",
+      "resourceGroup": "[variables('mockPremGroup')]",
       "dependsOn": [
         "TemplateOperations",
         "TemplateMockOnPrem"
