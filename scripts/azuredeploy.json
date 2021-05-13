@@ -1,0 +1,451 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Small unique string."
+      },
+      "minLength": 2,
+      "maxLength": 5,
+      "defaultValue": "demo"
+    },
+    "deployMock": {
+      "type": "bool",
+      "defaultValue": true
+    },
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Small unique string."
+      },
+      "defaultValue": "eastus"
+    },
+    "templateURL": {
+      "type": "string",
+      "metadata": {
+        "description": "URL Location on where to find the templates"
+      },
+      "defaultValue": "https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/master/templates/"
+    },
+    "serverUserName": {
+      "type": "string",
+      "metadata": {
+        "description": "Windows SA Account UserName"
+      },
+      "minLength": 5
+    },
+    "serverPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Windows SA Account Password"
+      },
+      "minLength": 10
+    },
+    "serverSize": {
+      "type": "string",
+      "metadata": {
+        "description": "The virtual machine server size."
+      },
+      "defaultValue": "Standard_D16s_v3",
+      "allowedValues": [
+        "Standard_D16s_v3",
+        "Standard_D32s_v3",
+        "Standard_D64s_v3",
+        "Standard_D16s_v4",
+        "Standard_D32s_v4",
+        "Standard_D64s_v4",
+        "Standard_D16d_v4",
+        "Standard_D32d_v4",
+        "Standard_D64d_v4",
+        "Standard_D16ds_v4",
+        "Standard_D32ds_v4",
+        "Standard_D64ds_v4",
+        "Standard_E8s_v3",
+        "Standard_E16s_v3",
+        "Standard_E16-4s_v3",
+        "Standard_E16-8s_v3",
+        "Standard_E20s_v3",
+        "Standard_E32s_v3",
+        "Standard_E32-8s_v3",
+        "Standard_E32-16s_v3",
+        "Standard_E48s_v3",
+        "Standard_E64s_v3",
+        "Standard_E64-16s_v3",
+        "Standard_E64-32s_v3",
+        "Standard_E8s_v4",
+        "Standard_E16s_v4",
+        "Standard_E16-8s_v4",
+        "Standard_E20s_v4",
+        "Standard_E32s_v4",
+        "Standard_E32-8s_v4",
+        "Standard_E32-16s_v4",
+        "Standard_E48s_v4",
+        "Standard_E64s_v4",
+        "Standard_E64-16s_v4",
+        "Standard_E64-32s_v4",
+        "Standard_E8d_v4",
+        "Standard_E16d_v4",
+        "Standard_E20d_v4",
+        "Standard_E32d_v4",
+        "Standard_E48d_v4",
+        "Standard_E64d_v4",
+        "Standard_E8ds_v4",
+        "Standard_E16ds_v4",
+        "Standard_E20ds_v4",
+        "Standard_E32ds_v4",
+        "Standard_E48ds_v4",
+        "Standard_E64ds_v4",
+        "Standard_E64-16ds_v4",
+        "Standard_E64-32ds_v4"
+      ]
+    },
+    "replicaRegion": {
+      "type": "string",
+      "metadata": {
+        "description": "The replica region."
+      },
+      "defaultValue": "westus"
+    }
+  },
+  "variables": {
+    "operationsGroup": "[concat('edge-', parameters('prefix'), '-operations')]",
+    "controlPlaneGroup": "[concat('edge-', parameters('prefix'), '-controlplane')]",
+    "dataPlaneGroup": "[concat('edge-', parameters('prefix'), '-controlplane')]",
+    "mockPremGroup": "[concat('edge-', parameters('prefix'), '-onprem-mock')]"
+  },
+  "resources": [
+    {
+      "comments": "## Operations Resource Group (Required) ##",
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2020-06-01",
+      "location": "[parameters('location')]",
+      "name": "[variables('operationsGroup')]",
+      "properties": {}
+    },
+    {
+      "comments": "## Lock Operations IT Resource Group (Required) ##",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "[concat('lock-', variables('operationsGroup'))]",
+      "resourceGroup": "[variables('operationsGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('operationsGroup'))]"
+      ],
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "outer"
+        },
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/locks",
+              "apiVersion": "2017-04-01",
+              "name": "DontDelete",
+              "properties": {
+                "level": "CanNotDelete",
+                "notes": "Prevent deletion of the resourceGroup"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "comments": "## Control Plane Resource Group (Required) ##",
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2021-04-01",
+      "location": "[parameters('location')]",
+      "name": "[variables('controlPlaneGroup')]",
+      "properties": {}
+    },
+    {
+      "comments": "## Lock Control Plane Resource Group (Required) ##",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "[concat('lock-', variables('controlPlaneGroup'))]",
+      "resourceGroup": "[variables('controlPlaneGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('controlPlaneGroup'))]"
+      ],
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "outer"
+        },
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/locks",
+              "apiVersion": "2017-04-01",
+              "name": "DontDelete",
+              "properties": {
+                "level": "CanNotDelete",
+                "notes": "Prevent deletion of the resourceGroup"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "comments": "## Data Plane Resource Group (Optional) ##",
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2021-04-01",
+      "location": "[parameters('location')]",
+      "name": "[variables('dataPlaneGroup')]",
+      "properties": {}
+    },
+    {
+      "comments": "## Lock Data Plane Resource Group (Required) ##",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "[concat('lock-', variables('dataPlaneGroup'))]",
+      "resourceGroup": "[variables('dataPlaneGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroup'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/locks",
+              "apiVersion": "2017-04-01",
+              "name": "DontDelete",
+              "properties": {
+                "level": "CanNotDelete",
+                "notes": "Prevent deletion of the resourceGroup"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "comments": "## On-Prem Resource Group (Optional) ##",
+      "condition": "[parameters('deployMock')]",
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2021-04-01",
+      "location": "[parameters('location')]",
+      "name": "[variables('mockPremGroup')]",
+      "properties": {}
+    },
+    {
+      "comments": "## On Prem Mock Resource Group (Required) ##",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "[concat('lock-', variables('mockPremGroup'))]",
+      "resourceGroup": "[variables('mockPremGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('mockPremGroup'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/locks",
+              "apiVersion": "2017-04-01",
+              "name": "DontDelete",
+              "properties": {
+                "level": "CanNotDelete",
+                "notes": "Prevent deletion of the resourceGroup"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "comments": "## Operations Deployment Template ##",
+      "name": "TemplateOperations",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('operationsGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('operationsGroup'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployOperations.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {}
+      }
+    },
+    {
+      "comments": "## On-Prem Mock Deployment Template ##",
+      "name": "TemplateMockOnPrem",
+      "condition": "[parameters('deployMock')]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-06-01",
+      "resourceGroup": "[variables('mockPremGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('mockPremGroup'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployMockOnPrem.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          },
+          "adminUsername": {
+            "value": "[parameters('serverUserName')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('serverPassword')]"
+          },
+          "vmName": {
+            "value": "hci"
+          },
+          "vmSize": {
+            "value": "[parameters('serverSize')]"
+          }
+        }
+      }
+    },
+    {
+      "comments": "## Control Plane Resources Deployment Template ##",
+      "name": "TemplateControlPlane",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('controlPlaneGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('controlPlaneGroup'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployControlPlane.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          },
+          "vnetGroup": {
+            "value": "[variables('operationsGroup')]"
+          },
+          "vnetName": {
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.controlPlaneNetwork.value.name]"
+          },
+          "subnetName": {
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.controlPlaneNetwork.value.subnetName]"
+          },
+          "dbReplicaRegion": {
+            "value": "[parameters('replicaRegion')]"
+          }
+        }
+      }
+    },
+    {
+      "comments": "## Data Plane Resources Deployment Template ##",
+      "name": "TemplateDataPlane",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "resourceGroup": "[variables('dataPlaneGroup')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups/', variables('dataPlaneGroup'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'deployDataPlane.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "prefix": {
+            "value": "[parameters('prefix')]"
+          },
+          "vnetGroup": {
+            "value": "[variables('operationsGroup')]"
+          },
+          "vnetName": {
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.dataPlaneNetwork.value.name]"
+          },
+          "subnetName": {
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.dataPlaneNetwork.value.subnetName]"
+          }
+        }
+      }
+    },
+    {
+      "comments": "## Operations VPN Gateway Connect Template ##",
+      "name": "TemplateOperationsLocalGateway",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-06-01",
+      "resourceGroup": "[variables('operationsGroup')]",
+      "dependsOn": [
+        "TemplateOperations",
+        "TemplateMockOnPrem"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'connectOperationsLocalGateway.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "azureCloudVnetPrefix": {
+            "value": "[reference('TemplateMockOnPrem', '2020-06-01').outputs.mocOnpremNetworkPrefix.value]"
+          },
+          "gatewayIpAddress": {
+            "value": "[reference('TemplateMockOnPrem', '2020-06-01').outputs.vpnIp.value]"
+          },
+          "azureNetworkGatewayName": {
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.azureGatewayName.value]"
+          }
+        }
+      }
+    },
+    {
+      "comments": "## On-Prem VPN Gateway Connect Template ##",
+      "name": "TemplateMockOnPremLocalGateway",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-06-01",
+      "resourceGroup": "[variables('mockPremGroup')]",
+      "dependsOn": [
+        "TemplateOperations",
+        "TemplateMockOnPrem"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('templateURL'), 'connectMockOnPremLocalGateway.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "gatewayIpAddress": {
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.vpnIp.value]"
+          },
+          "azureCloudVnetPrefix": {
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.hubNetworkAddressPrefix.value]"
+          },
+          "spokeNetworkAddressPrefix": {
+            "value": "[reference('TemplateOperations', '2020-06-01').outputs.spokeNetworkAddressPrefix.value]"
+          },
+          "mocOnpremGatewayName": {
+            "value": "[reference('TemplateMockOnPrem', '2020-06-01').outputs.mocOnpremGatewayName.value]"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}
