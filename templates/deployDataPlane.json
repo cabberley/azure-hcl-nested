@@ -10,17 +10,12 @@
       "minLength": 2,
       "maxLength": 5
     },
-    "storageAccountType": {
-      "type": "string",
+    "shareQuota": {
+      "type": "int",
+      "defaultValue": 5120,
       "metadata": {
-        "description": "Account type, premium vs standard, and local, global redundancy"
-      },
-      "defaultValue": "Standard_LRS",
-      "allowedValues": [
-        "Standard_LRS",
-        "Standard_GRS",
-        "Premium_LRS"
-      ]
+        "description": "Specifies the maximum size of the share, in gigabytes. Must be greater than 0, and less than or equal to 5TB (5120). For Large File Shares, the maximum size is 102400."
+      }
     },
     "allowBlobPublicAccess": {
       "type": "bool",
@@ -52,39 +47,241 @@
     }
   },
   "variables": {
-    "storageAccountName": "[concat(parameters('prefix'), uniqueString(resourceGroup().id), '2')]",
-    "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+    "cleanUnique": "[toLower(replace(parameters('prefix'),'-', ''))]",
+    "vnetId": "[concat(subscription().id, '/resourceGroups/', parameters('vnetGroup'), '/providers/Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
+    "subnetId": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
+    "storageAccountName": "[concat(variables('cleanUnique'), 'data', uniqueString(resourceGroup().id))]",
+    "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
+    "storageFileName": "airflowdags",
+    "storageContainerName": "data",
+    "filePrivateEndpointName": "[concat(variables('storageAccountName'), '-file-endpoint')]",
+    "filePublicDNSZoneForwarder": "[concat('.file.', environment().suffixes.storage)]",
+    "filePrivateDnsZoneName": "[concat('privatelink', variables('filePublicDNSZoneForwarder'))]",
+    "filePrivateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('filePrivateDnsZoneName'))]",
+    "fileStorageAccountPrivateEndpointGroupName": "file",
+    "filePrivateDnsZoneGroup": "[concat(variables('filePrivateEndpointName'),'/', variables('fileStorageAccountPrivateEndpointGroupName'), 'PrivateDnsZoneGroup')]",
+    "fileStorageAccountPrivateEndpointId": "[resourceId('Microsoft.Network/privateEndpoints', variables('filePrivateEndpointName'))]",
+    "blobPrivateEndpointName": "[concat(variables('storageAccountName'), '-blob-endpoint')]",
+    "blobPublicDNSZoneForwarder": "[concat('.blob.', environment().suffixes.storage)]",
+    "blobPrivateDnsZoneName": "[concat('privatelink', variables('blobPublicDNSZoneForwarder'))]",
+    "blobPrivateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('blobPrivateDnsZoneName'))]",
+    "blobStorageAccountPrivateEndpointGroupName": "blob",
+    "blobPrivateDnsZoneGroup": "[concat(variables('blobPrivateEndpointName'),'/', variables('blobStorageAccountPrivateEndpointGroupName'), 'PrivateDnsZoneGroup')]",
+    "blobStorageAccountPrivateEndpointId": "[resourceId('Microsoft.Network/privateEndpoints', variables('blobPrivateEndpointName'))]"
   },
   "resources": [
     {
       "comments": "## Storage Account ##",
-      "name": "[variables('storageAccountName')]",
+      "apiVersion": "2021-01-01",
       "type": "Microsoft.Storage/storageAccounts",
-      "apiVersion": "2016-01-01",
+      "name": "[variables('storageAccountName')]",
       "location": "[resourceGroup().location]",
-      "tags": {
-        "displayName": "Storage Account"
-      },
-      "kind": "Storage",
       "sku": {
-        "name": "[parameters('storageAccountType')]",
+        "name": "Standard_LRS",
         "tier": "Standard"
       },
+      "kind": "StorageV2",
       "properties": {
+        "accessTier": "Hot",
+        "supportsHttpsTrafficOnly": true,
+        "minimumTlsVersion": "TLS1_2",
+        "allowBlobPublicAccess": "[parameters('allowBlobPublicAccess')]",
         "encryption": {
-          "networkAcls": {
-            "bypass": "AzureServices",
-            "virtualNetworkRules": [],
-            "ipRules": [],
-            "defaultAction": "Deny"
-          },
           "keySource": "Microsoft.Storage",
           "services": {
             "blob": {
               "enabled": true
             }
           }
+        },
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "virtualNetworkRules": [],
+          "ipRules": [],
+          "defaultAction": "Deny"
         }
+      },
+      "resources": [
+        {
+          "type": "fileServices/shares",
+          "apiVersion": "2019-06-01",
+          "name": "[concat('/default/', variables('storageFileName'))]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+          ],
+          "properties": {
+            "shareQuota": "[parameters('shareQuota')]"
+          }
+        },
+        {
+          "comments": "## Blob Storage ##",
+          "type": "blobServices/containers",
+          "apiVersion": "2019-06-01",
+          "name": "[concat('default/', variables('storageContainerName'))]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+          ]
+        }
+      ]
+    },
+    {
+      "comments": "## File Storage Private DNS Zone ##",
+      "type": "Microsoft.Network/privateDnsZones",
+      "apiVersion": "2018-09-01",
+      "name": "[variables('filePrivateDnsZoneName')]",
+      "location": "global",
+      "properties": {
+        "maxNumberOfRecordSets": 25000,
+        "maxNumberOfVirtualNetworkLinks": 1000,
+        "maxNumberOfVirtualNetworkLinksWithRegistration": 100
+      }
+    },
+    {
+      "comments": "## File Storage Virtual Network Link ##",
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "apiVersion": "2020-01-01",
+      "name": "[concat(variables('filePrivateDnsZoneName'), '/link_to_', toLower(parameters('vnetName')))]",
+      "location": "global",
+      "dependsOn": [
+        "[variables('filePrivateDnsZoneId')]"
+      ],
+      "properties": {
+        "registrationEnabled": false,
+        "virtualNetwork": {
+          "id": "[variables('vnetId')]"
+        }
+      }
+    },
+    {
+      "comments": "## File Storage Private Endpoint ##",
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "2020-04-01",
+      "name": "[variables('filePrivateEndpointName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('storageId')]"
+      ],
+      "properties": {
+        "privateLinkServiceConnections": [
+          {
+            "name": "[variables('filePrivateEndpointName')]",
+            "properties": {
+              "privateLinkServiceId": "[variables('storageId')]",
+              "groupIds": [
+                "[variables('fileStorageAccountPrivateEndpointGroupName')]"
+              ]
+            }
+          }
+        ],
+        "subnet": {
+          "id": "[variables('subnetId')]"
+        },
+        "customDnsConfigs": [
+          {
+            "fqdn": "[concat(variables('storageAccountName'), variables('filePublicDNSZoneForwarder'))]"
+          }
+        ]
+      }
+    },
+    {
+      "comments": "## File Storage Private DNS Zone Group ##",
+      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+      "apiVersion": "2020-03-01",
+      "name": "[variables('filePrivateDnsZoneGroup')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('filePrivateDnsZoneId')]",
+        "[variables('fileStorageAccountPrivateEndpointId')]"
+      ],
+      "properties": {
+        "privateDnsZoneConfigs": [
+          {
+            "name": "dnsConfig",
+            "properties": {
+              "privateDnsZoneId": "[variables('filePrivateDnsZoneId')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "comments": "## Blob Storage Private DNS Zone ##",
+      "type": "Microsoft.Network/privateDnsZones",
+      "apiVersion": "2018-09-01",
+      "name": "[variables('blobPrivateDnsZoneName')]",
+      "location": "global",
+      "properties": {
+        "maxNumberOfRecordSets": 25000,
+        "maxNumberOfVirtualNetworkLinks": 1000,
+        "maxNumberOfVirtualNetworkLinksWithRegistration": 100
+      }
+    },
+    {
+      "comments": "## Blob Storage Virtual Network Link ##",
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "apiVersion": "2020-01-01",
+      "name": "[concat(variables('blobPrivateDnsZoneName'), '/link_to_', toLower(parameters('vnetName')))]",
+      "location": "global",
+      "dependsOn": [
+        "[variables('blobPrivateDnsZoneId')]"
+      ],
+      "properties": {
+        "registrationEnabled": false,
+        "virtualNetwork": {
+          "id": "[variables('vnetId')]"
+        }
+      }
+    },
+    {
+      "comments": "## Blob Storage Private Endpoint ##",
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "2020-04-01",
+      "name": "[variables('blobPrivateEndpointName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('storageId')]"
+      ],
+      "properties": {
+        "privateLinkServiceConnections": [
+          {
+            "name": "[variables('blobPrivateEndpointName')]",
+            "properties": {
+              "privateLinkServiceId": "[variables('storageId')]",
+              "groupIds": [
+                "[variables('blobStorageAccountPrivateEndpointGroupName')]"
+              ]
+            }
+          }
+        ],
+        "subnet": {
+          "id": "[variables('subnetId')]"
+        },
+        "customDnsConfigs": [
+          {
+            "fqdn": "[concat(variables('storageAccountName'), variables('blobPublicDNSZoneForwarder'))]"
+          }
+        ]
+      }
+    },
+    {
+      "comments": "## Blob Storage Private DNS Zone Group ##",
+      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+      "apiVersion": "2020-03-01",
+      "name": "[variables('blobPrivateDnsZoneGroup')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('blobPrivateDnsZoneId')]",
+        "[variables('blobStorageAccountPrivateEndpointId')]"
+      ],
+      "properties": {
+        "privateDnsZoneConfigs": [
+          {
+            "name": "dnsConfig",
+            "properties": {
+              "privateDnsZoneId": "[variables('blobPrivateDnsZoneId')]"
+            }
+          }
+        ]
       }
     }
   ],
