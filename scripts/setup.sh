@@ -49,7 +49,7 @@ curl https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azured
 $az deployment sub create --template-file azuredeploy.json  --no-wait \
   --location $LOCATION \
   --parameters prefix=$RAND \
-  --parameters replicaRegion $REGION_PAIR \
+  --parameters replicaRegion=$REGION_PAIR \
   --parameters serverUserName=$ADMIN_USER \
   --parameters serverPassword=$ADMIN_PASSWORD \
   -ojsonc
