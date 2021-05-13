@@ -112,7 +112,7 @@
   "variables": {
     "operationsGroup": "[concat('edge-', parameters('prefix'), '-operations')]",
     "controlPlaneGroup": "[concat('edge-', parameters('prefix'), '-controlplane')]",
-    "dataPlaneGroup": "[concat('edge-', parameters('prefix'), '-controlplane')]",
+    "dataPlaneGroup": "[concat('edge-', parameters('prefix'), '-dataplane')]",
     "mockPremGroup": "[concat('edge-', parameters('prefix'), '-onprem-mock')]"
   },
   "resources": [
