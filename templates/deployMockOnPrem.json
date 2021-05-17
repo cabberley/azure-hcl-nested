@@ -11,6 +11,25 @@
       "maxLength": 6,
       "defaultValue": "demo"
     },
+    "updateGuid": {
+      "type": "string",
+      "defaultValue": "[newGuid()]",
+      "metadata": {
+        "description": "Used to force the execution of the script resource when no other properties have changed."
+      }
+    },
+    "accessLevel": {
+      "type": "string",
+      "allowedValues": [
+        "Owner",
+        "Contributor",
+        "Reader"
+      ],
+      "metadata": {
+        "description": "Role Access Level"
+      },
+      "defaultValue": "Contributor"
+    },
     "configureSitetosite": {
       "type": "bool",
       "defaultValue": true
@@ -183,6 +202,8 @@
   },
   "variables": {
     "cleanPrefix": "[toLower(parameters('prefix'))]",
+    "userAssignedIdentityName": "deployerIdentity",
+    "roleAssignmentName": "[guid(concat(resourceGroup().id, 'contributor'))]",
     "storageAccountName": "[concat(parameters('prefix'), uniqueString(resourceGroup().id), '2')]",
     "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
     "vmName": "[concat(variables('cleanPrefix'), parameters('vmName'), '-vm')]",
@@ -200,6 +221,52 @@
     "wadcfgxend": "\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>"
   },
   "resources": [
+    {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2018-11-30",
+      "name": "[variables('userAssignedIdentityName')]",
+      "location": "[resourceGroup().location]"
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2021-04-01-preview",
+      "name": "[variables('roleAssignmentName')]",
+      "dependsOn": [ "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentityName'))]" ],
+      "properties": {
+        "roleDefinitionId": "[variables(parameters('accessLevel'))]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentityName')), '2015-08-31-preview').principalId]",
+        "scope": "[resourceGroup().id]",
+        "principalType": "ServicePrincipal"
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2020-10-01",
+      "kind": "AzureCLI",
+      "name": "createPrincipal.sh",
+      "dependsOn": [ "[resourceId('Microsoft.Authorization/roleAssignments', variables('roleAssignmentName'))]" ],
+      "location": "[resourceGroup().location]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('userAssignedIdentityName'))]": {}
+        }
+      },
+      "properties": {
+        "forceUpdateTag": "[parameters('updateGuid')]",
+        "containerSettings": {
+          "containerGroupName": "scriptExecutor"
+        },
+        "AzCliVersion": "2.22.1",
+        "arguments": "[variables('cleanPrefix')]",
+        "scriptContent": "appInfo=$(az ad sp create-for-rbac -n 'http://AzureArcServers-$1 --role contributor')
+                          echo $appInfo > $AZ_SCRIPTS_OUTPUT_PATH",
+        "supportingScriptUris": [],
+        "timeout": "PT30M",
+        "retentionInterval": "P1D",
+        "cleanupPreference": "OnSuccess"
+      }
+    },
     {
       "comments": "## Storage Account ##",
       "name": "[variables('storageAccountName')]",
@@ -562,6 +629,29 @@
             "autoUpgradeMinorVersion": true,
             "settings": {},
             "protectedSettings": null
+          }
+        },
+        {
+          "type": "extensions",
+          "name": "InstallARCAgent",
+          "apiVersion": "2018-06-01",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[variables('vmName')]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "typeHandlerVersion": "1.10",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[uri(variables('artifactsLocation'), concat('scripts/install_arc_agent.ps1'))]"
+              ]
+            },
+            "protectedSettings": {
+              "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Bypass -File install_arc_agent.ps1', ' -appId ', reference('createPrincipal.sh', '2020-10-01').outputs.appId, ' -password ', reference('createPrincipal.sh', '2020-10-01').outputs.password, ' -tenantId ', subscription().tenantId, ' -resourceGroup ', resourceGroup().name,  ' -subscriptionId ', subscription().subscriptionId, ' -location ', resourceGroup().location, ' -adminUsername ', parameters('adminUsername'))]"
+            }
           }
         },
         {
