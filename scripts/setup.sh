@@ -32,7 +32,7 @@ if [ -z "$LOCATION" ]; then
 fi
 
 if [ -z "$REGION_PAIR" ]; then
-    REGION_PAIR="westus"
+    REGION_PAIR=$($az account list-locations --query "[?name=='$LOCATION']".metadata.pairedRegion[0].name -otsv)
 fi
 
 RESOURCEGROUP="edge-${RAND}"
@@ -48,8 +48,8 @@ echo ""
 curl https://raw.githubusercontent.com/danielscholl/azure-hcl-nested/main/azuredeploy.json -o azuredeploy.json > /dev/null 2>&1
 $az deployment sub create --template-file azuredeploy.json  --no-wait \
   --location $LOCATION \
-  --replicaRegion $REGION_PAIR
   --parameters prefix=$RAND \
+  --parameters replicaRegion=$REGION_PAIR \
   --parameters serverUserName=$ADMIN_USER \
   --parameters serverPassword=$ADMIN_PASSWORD \
   -ojsonc

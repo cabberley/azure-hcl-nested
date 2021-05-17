@@ -74,8 +74,16 @@
     "keyVaultName": "[concat(variables('cleanUnique'), 'ctl', uniqueString(resourceGroup().id))]",
     "keyVaultId": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
     "databaseAccountName": "[concat(variables('cleanUnique'), 'ctl', uniqueString(resourceGroup().id))]",
+    "databaseId": "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('databaseAccountName'))]",
     "databaseName": "edge-graph",
     "graphName": "entitlements",
+    "gremlinPrivateEndpointName": "[concat(variables('databaseAccountName'), '-gremlin-endpoint')]",
+    "gremlinPublicDNSZoneForwarder": "[concat('.documents.', 'azure.com')]",
+    "gremlinPrivateDnsZoneName": "[concat('privatelink', variables('gremlinPublicDNSZoneForwarder'))]",
+    "gremlinPrivateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('gremlinPrivateDnsZoneName'))]",
+    "gremlinDatabaseAccountPrivateEndpointGroupName": "sql",
+    "gremlinPrivateDnsZoneGroup": "[concat(variables('gremlinPrivateEndpointName'),'/', variables('gremlinDatabaseAccountPrivateEndpointGroupName'), 'PrivateDnsZoneGroup')]",
+    "gremlinDatabaseAccountPrivateEndpointId": "[resourceId('Microsoft.Network/privateEndpoints', variables('gremlinPrivateEndpointName'))]",
     "storageAccountName": "[concat(variables('cleanUnique'), 'ctl', uniqueString(resourceGroup().id))]",
     "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
     "storageTableName": "partition",
@@ -199,6 +207,86 @@
             "maxThroughput": "[parameters('dbAutoscaleMaxThroughput')]"
           }
         }
+      }
+    },
+    {
+      "comments": "## Gremlin Private DNS Zone ##",
+      "type": "Microsoft.Network/privateDnsZones",
+      "apiVersion": "2018-09-01",
+      "name": "[variables('gremlinPrivateDnsZoneName')]",
+      "location": "global",
+      "properties": {
+        "maxNumberOfRecordSets": 25000,
+        "maxNumberOfVirtualNetworkLinks": 1000,
+        "maxNumberOfVirtualNetworkLinksWithRegistration": 100
+      }
+    },
+    {
+      "comments": "## Gremlin Virtual Network Link ##",
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "apiVersion": "2018-09-01",
+      "name": "[concat(variables('gremlinPrivateDnsZoneName'), '/link_to_', toLower(parameters('vnetName')))]",
+      "location": "global",
+      "dependsOn": [
+        "[variables('gremlinPrivateDnsZoneId')]"
+      ],
+      "properties": {
+        "registrationEnabled": false,
+        "virtualNetwork": {
+          "id": "[variables('vnetId')]"
+        }
+      }
+    },
+    {
+      "comments": "## Gremlin Private Endpoint ##",
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "2020-04-01",
+      "name": "[variables('gremlinPrivateEndpointName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('databaseId')]"
+      ],
+      "properties": {
+        "privateLinkServiceConnections": [
+          {
+            "name": "[variables('gremlinPrivateEndpointName')]",
+            "properties": {
+              "privateLinkServiceId": "[variables('databaseId')]",
+              "groupIds": [
+                "[variables('gremlinDatabaseAccountPrivateEndpointGroupName')]"
+              ]
+            }
+          }
+        ],
+        "subnet": {
+          "id": "[variables('subnetId')]"
+        },
+        "customDnsConfigs": [
+          {
+            "fqdn": "[concat(variables('databaseAccountName'), variables('gremlinPublicDNSZoneForwarder'))]"
+          }
+        ]
+      }
+    },
+    {
+      "comments": "## Gremlin Private DNS Zone Group ##",
+      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+      "apiVersion": "2020-03-01",
+      "name": "[variables('gremlinPrivateDnsZoneGroup')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('gremlinPrivateDnsZoneId')]",
+        "[variables('gremlinDatabaseAccountPrivateEndpointId')]"
+      ],
+      "properties": {
+        "privateDnsZoneConfigs": [
+          {
+            "name": "dnsConfig",
+            "properties": {
+              "privateDnsZoneId": "[variables('tablePrivateDnsZoneId')]"
+            }
+          }
+        ]
       }
     },
     {
