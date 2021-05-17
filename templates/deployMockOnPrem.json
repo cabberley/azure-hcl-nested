@@ -262,7 +262,7 @@
         },
         "AzCliVersion": "2.22.1",
         "arguments": "[variables('cleanPrefix')]",
-        "scriptContent": "appInfo=$(az ad sp create-for-rbac -n 'http://AzureArcServers-$1 --role contributor')
+        "scriptContent": "appInfo=$(az ad sp create-for-rbac -n 'http://AzureArcServers-$1' --role contributor)
                           echo $appInfo > $AZ_SCRIPTS_OUTPUT_PATH",
         "supportingScriptUris": [],
         "timeout": "PT30M",
@@ -664,7 +664,7 @@
           "location": "[resourceGroup().location]",
           "dependsOn": [
             "[variables('vmName')]",
-            "createPrincipal.sh"
+            "[resourceId('Microsoft.Resources/deploymentScripts', 'createPrincipal.sh')]"
           ],
           "properties": {
             "publisher": "Microsoft.Compute",
