@@ -28,7 +28,7 @@ if [ -z "$ADMIN_USER" ]; then
 fi
 
 if [ -z "$LOCATION" ]; then
-    LOCATION="eastus"
+    LOCATION="eastus2"
 fi
 
 if [ -z "$REGION_PAIR" ]; then
