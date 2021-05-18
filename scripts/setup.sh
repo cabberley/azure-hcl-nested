@@ -45,7 +45,7 @@ RESOURCEGROUP="edge-${RAND}"
 echo "================================================================================="
 echo -n "Deploying Edge Solution..."
 echo ""
-curl https://raw.githubusercontent.com/cabberley/azure-hcl-nested/main/azuredeploy.json -o azuredeploy.json > /dev/null 2>&1
+curl https://raw.githubusercontent.com/cabberley/azure-hcl-nested/main/azuredeploy.json -o azuredeploy$RAND.json > /dev/null 2>&1
 $az deployment sub create --template-file azuredeploy$RAND.json  --no-wait \
   --location $LOCATION \
   --parameters prefix=$RAND \
