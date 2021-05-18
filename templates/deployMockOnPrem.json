@@ -102,7 +102,7 @@
       "metadata": {
         "description": "The virtual machine server size."
       },
-      "defaultValue": "Standard_D16s_v3",
+      "defaultValue": "Standard_D16s_v4",
       "allowedValues": [
         "Standard_D16s_v3",
         "Standard_D32s_v3",
